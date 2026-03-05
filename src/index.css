@@ -4,3 +4,7 @@
 @theme {
   --font-atkinson: "Atkinson Hyperlegible Next", sans-serif;
 }
+
+html {
+  scroll-behavior: smooth;
+}
