@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Rocket, LineChart, Target, Check, ArrowUpRight, Database, Eye, Send, Lightbulb, ClipboardList, Search, TrendingUp, Instagram, Facebook, Linkedin } from 'lucide-react';
+import { Rocket, LineChart, Target, Check, ArrowUpRight, Database, Eye, Send, Lightbulb, ClipboardList, Search, TrendingUp, Instagram, Facebook, Linkedin, Menu, X } from 'lucide-react';
 import { motion } from 'motion/react';
 import BrandGlow from './components/BrandGlow';
 import { siteConfig } from './config/siteConfig';
@@ -33,6 +33,7 @@ const staggerItem = {
 
 export default function App() {
   const [formSubmitted, setFormSubmitted] = useState(false);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,18 +56,90 @@ export default function App() {
         <BrandGlow />
 
         {/* Header */}
-        <header className="w-full max-w-7xl mx-auto px-6 py-6 flex items-center justify-between relative z-10">
-          <img src="/nortyn-bco.png" alt="Nortyn" className="h-[44px] w-auto" />
+        <header className="w-full max-w-7xl mx-auto px-6 py-6 flex items-center justify-between relative z-50">
+          <img src="/nortyn-bco.png" alt="Nortyn" className="h-[44px] w-auto relative z-50" />
 
+          {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-white/80">
             {siteConfig.navigation.map((item) => (
               <a key={item.href} href={item.href} className="hover:text-[#00a99d] transition-colors">{item.label}</a>
             ))}
           </nav>
 
-          <a href="#demonstracao" className="bg-[#009a93] text-white px-6 py-2.5 rounded-lg font-semibold text-lg transition-all duration-300 hover:opacity-90 hover:scale-105 shadow-md">
-            Agendar demonstração
-          </a>
+          <div className="flex items-center gap-4">
+            <a href="#demonstracao" className="hidden md:flex bg-[#009a93] text-white px-6 py-2.5 rounded-lg font-semibold text-lg transition-all duration-300 hover:opacity-90 hover:scale-105 shadow-md">
+              Agendar demonstração
+            </a>
+
+            {/* Mobile Menu Button */}
+            <button
+              className="md:hidden text-white p-2 z-50 transition-colors hover:text-[#00a99d]"
+              onClick={() => setIsMenuOpen(!isMenuOpen)}
+              aria-label="Abrir menu"
+            >
+              {isMenuOpen ? <X className="w-8 h-8" /> : <Menu className="w-8 h-8" />}
+            </button>
+          </div>
+
+          {/* Mobile Menu Overlay */}
+          <motion.div
+            initial={false}
+            animate={isMenuOpen ? { opacity: 1, x: 0 } : { opacity: 0, x: '100%' }}
+            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+            className={`fixed inset-0 bg-[#01031b]/95 backdrop-blur-xl z-40 flex flex-col md:hidden ${isMenuOpen ? 'pointer-events-auto' : 'pointer-events-none'}`}
+          >
+            <div className="flex flex-col h-full px-8 pt-32 pb-12">
+              {/* Menu Links */}
+              <div className="flex flex-col gap-6">
+                {siteConfig.navigation.map((item, index) => (
+                  <motion.a
+                    key={item.href}
+                    href={item.href}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={isMenuOpen ? { opacity: 1, x: 0 } : { opacity: 0, x: 20 }}
+                    transition={{ delay: 0.1 + index * 0.1 }}
+                    className="text-3xl font-bold text-white/90 hover:text-[#00a99d] transition-colors"
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    {item.label}
+                  </motion.a>
+                ))}
+              </div>
+
+              {/* CTA Button */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={isMenuOpen ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+                transition={{ delay: 0.5 }}
+                className="mt-12"
+              >
+                <a
+                  href="#demonstracao"
+                  className="inline-block w-full bg-gradient-to-r from-[#00a99d] to-[#2e3192] text-white text-center px-8 py-4 rounded-xl font-bold text-lg shadow-lg"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Agendar demonstração
+                </a>
+              </motion.div>
+
+              {/* Footer Info in Menu */}
+              <div className="mt-auto border-t border-white/10 pt-8">
+                <p className="text-gray-400 text-sm mb-4">Redes Sociais e Contato</p>
+                <div className="flex items-center gap-6 mb-6">
+                  <a href={siteConfig.socialLinks.instagram} className="text-white/70 hover:text-[#00a99d]">
+                    <Instagram className="w-6 h-6" />
+                  </a>
+                  <a href={siteConfig.socialLinks.facebook} className="text-white/70 hover:text-[#00a99d]">
+                    <Facebook className="w-6 h-6" />
+                  </a>
+                  <a href={siteConfig.socialLinks.linkedin} className="text-white/70 hover:text-[#00a99d]">
+                    <Linkedin className="w-6 h-6" />
+                  </a>
+                </div>
+                <p className="text-white/60 text-sm">{siteConfig.contact.email}</p>
+              </div>
+            </div>
+          </motion.div>
         </header>
 
         {/* Hero Content */}
@@ -846,94 +919,97 @@ export default function App() {
         </motion.div>
       </section>
 
-      {/* Quem é a Nortyn Section (Editorial Style) */}
-      <section id="sobre-nos" className="w-full bg-white py-24 md:py-32 overflow-hidden">
-        <motion.div {...fadeInUp} className="max-w-7xl mx-auto px-4 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+      {/* Unified Section: Sobre Nós + CTA Final */}
+      <section
+        id="sobre-nos"
+        className="w-full py-24 md:py-32 overflow-hidden bg-cover bg-center relative"
+        style={{ backgroundImage: "url('/bg-final.png')" }}
+      >
+        {/* Overlay para legibilidade em toda a área */}
+        <div className="absolute inset-0 bg-white/60 pointer-events-none"></div>
 
-          {/* Left Column (Copy & Oversized Typography) */}
-          <div className="flex flex-col justify-center">
-            <span className="text-sm font-bold text-gray-500 tracking-widest uppercase mb-6 block">
-              [ QUEM É A NORTYN ]
-            </span>
-            <h2 className="text-4xl md:text-5xl font-bold font-atkinson text-[#1d1d30] leading-tight mb-8">
-              A Nortyn nasce da experiência prática em indústria.
-            </h2>
+        <div className="relative z-10 max-w-7xl mx-auto px-4">
+          {/* Part 1: Quem é a Nortyn */}
+          <motion.div {...fadeInUp} className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center mb-24 md:mb-32">
+            {/* Left Column (Copy) */}
+            <div className="flex flex-col justify-center">
+              <span className="text-sm font-bold text-gray-500 tracking-widest uppercase mb-6 block">
+                [ QUEM É A NORTYN ]
+              </span>
+              <h2 className="text-4xl md:text-5xl font-bold font-atkinson text-[#1d1d30] leading-tight mb-8">
+                A Nortyn nasce da experiência prática em indústria.
+              </h2>
 
-            <p className="text-gray-600 text-lg mb-4">
-              Nosso time de especialistas tem mais de 25 anos desenvolvendo soluções para áreas comerciais. Conhece o chão de fábrica, a pressão por meta e a realidade do representante em campo.
-            </p>
-            <p className="text-gray-600 text-lg mb-8">
-              A Nortyn entrega organização, clareza e execução. Tecnologia aplicada à rotina real da indústria.
-            </p>
+              <p className="text-gray-600 text-lg mb-4">
+                Nosso time de especialistas tem mais de 25 anos desenvolvendo soluções para áreas comerciais. Conhece o chão de fábrica, a pressão por meta e a realidade do representante em campo.
+              </p>
+              <p className="text-gray-600 text-lg mb-8">
+                A Nortyn entrega organização, clareza e execução. Tecnologia aplicada à rotina real da indústria.
+              </p>
 
-            <ul className="flex flex-col gap-4">
-              <li className="flex items-start gap-3 text-gray-700 font-medium mb-4">
-                <div className="w-6 h-6 rounded-full bg-[#009a93]/10 flex items-center justify-center shrink-0 mt-0.5">
-                  <Check className="w-4 h-4 text-[#009a93]" strokeWidth={3} />
-                </div>
-                Linguagem simples, números claros e decisão com base em fatos.
-              </li>
-              <li className="flex items-start gap-3 text-gray-700 font-medium">
-                <div className="w-6 h-6 rounded-full bg-[#009a93]/10 flex items-center justify-center shrink-0 mt-0.5">
-                  <Check className="w-4 h-4 text-[#009a93]" strokeWidth={3} />
-                </div>
-                Implantação rápida, com suporte próximo e foco no que muda a rotina do comercial.
-              </li>
-            </ul>
-          </div>
-
-          {/* Right Column (Image) */}
-          <div className="relative w-full h-[400px] md:h-[450px] rounded-[2rem]">
-            <img
-              src="/img-equipe.png"
-              alt="Time Nortyn"
-              className="w-full h-full object-cover rounded-[2rem] shadow-xl"
-            />
-          </div>
-
-        </motion.div>
-      </section>
-
-      {/* Pre-Footer CTA Section (Floating Banner) */}
-      <section className="w-full bg-white py-24 px-4">
-        {/* Banner Container */}
-        <motion.div {...fadeInUp} className="max-w-6xl mx-auto relative rounded-[2.5rem] shadow-2xl overflow-hidden" style={{ backgroundColor: '#01031b' }}>
-          {/* Noise Texture */}
-          <div
-            className="absolute inset-0 z-[2] opacity-[0.05] pointer-events-none"
-            style={{
-              backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`
-            }}
-          ></div>
-
-          {/* Glow Background */}
-          <BrandGlow />
-
-          {/* Content */}
-          <div className="relative z-10 px-6 py-16 md:py-20 text-center flex flex-col items-center">
-            <h2 className="text-4xl md:text-5xl font-bold font-atkinson text-white leading-tight mb-6 max-w-3xl">
-              Automatize sua gestão comercial e controle suas metas com clareza.
-            </h2>
-
-            <p className="text-lg text-white/80 mb-10 max-w-2xl">
-              Tenha visão D-1, metas bem distribuídas e plano de ação estruturado. Veja na demonstração como revolucionar a sua operação.
-            </p>
-
-            {/* Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center w-full sm:w-auto">
-              {/* Primary Button */}
-              <a href="#demonstracao" className="bg-[#009a93] text-white rounded-lg px-8 py-4 font-semibold text-lg transition-all duration-300 hover:scale-105 hover:bg-[#00807a] shadow-lg text-center">
-                Agendar demonstração personalizada
-              </a>
-
-              {/* Secondary Button */}
-              <a href="#beneficios" className="bg-transparent border-2 border-white text-white font-semibold text-lg rounded-lg px-8 py-4 transition-all duration-300 hover:scale-105 hover:bg-white/10 text-center">
-                Rever benefícios
-              </a>
+              <ul className="flex flex-col gap-4">
+                <li className="flex items-start gap-3 text-gray-700 font-medium mb-4">
+                  <div className="w-6 h-6 rounded-full bg-[#009a93]/10 flex items-center justify-center shrink-0 mt-0.5">
+                    <Check className="w-4 h-4 text-[#009a93]" strokeWidth={3} />
+                  </div>
+                  Linguagem simples, números claros e decisão com base em fatos.
+                </li>
+                <li className="flex items-start gap-3 text-gray-700 font-medium">
+                  <div className="w-6 h-6 rounded-full bg-[#009a93]/10 flex items-center justify-center shrink-0 mt-0.5">
+                    <Check className="w-4 h-4 text-[#009a93]" strokeWidth={3} />
+                  </div>
+                  Implantação rápida, com suporte próximo e foco no que muda a rotina do comercial.
+                </li>
+              </ul>
             </div>
-          </div>
-        </motion.div>
+
+            {/* Right Column (Image) */}
+            <div className="relative w-full h-[400px] md:h-[450px] rounded-[2rem]">
+              <img
+                src="/img-equipe.png"
+                alt="Time Nortyn"
+                className="w-full h-full object-cover rounded-[2rem] shadow-xl"
+              />
+            </div>
+          </motion.div>
+
+          {/* Part 2: CTA Final Banner */}
+          <motion.div {...fadeInUp} className="max-w-6xl mx-auto relative rounded-[2.5rem] shadow-2xl overflow-hidden" style={{ backgroundColor: '#01031b' }}>
+            {/* Noise Texture */}
+            <div
+              className="absolute inset-0 z-[2] opacity-[0.05] pointer-events-none"
+              style={{
+                backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='1.2' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`
+              }}
+            ></div>
+
+            {/* Glow Background */}
+            <BrandGlow />
+
+            {/* Content */}
+            <div className="relative z-10 px-6 py-16 md:py-20 text-center flex flex-col items-center">
+              <h2 className="text-4xl md:text-5xl font-bold font-atkinson text-white leading-tight mb-6 max-w-3xl">
+                Automatize sua gestão comercial e controle suas metas com clareza.
+              </h2>
+
+              <p className="text-lg text-white/80 mb-10 max-w-2xl">
+                Tenha visão D-1, metas bem distribuídas e plano de ação estruturado. Veja na demonstração como revolucionar a sua operação.
+              </p>
+
+              {/* Buttons */}
+              <div className="flex flex-col sm:flex-row gap-4 justify-center w-full sm:w-auto">
+                <a href="#demonstracao" className="bg-[#009a93] text-white rounded-lg px-8 py-4 font-semibold text-lg transition-all duration-300 hover:scale-105 hover:bg-[#00807a] shadow-lg text-center">
+                  Agendar demonstração personalizada
+                </a>
+                <a href="#beneficios" className="bg-transparent border-2 border-white text-white font-semibold text-lg rounded-lg px-8 py-4 transition-all duration-300 hover:scale-105 hover:bg-white/10 text-center">
+                  Rever benefícios
+                </a>
+              </div>
+            </div>
+          </motion.div>
+        </div>
       </section>
+
 
       {/* Footer */}
       <footer className="w-full bg-[#312783] text-white">
