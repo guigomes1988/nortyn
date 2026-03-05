@@ -35,9 +35,34 @@ export default function App() {
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setFormSubmitted(true);
+    const formData = new FormData(e.currentTarget);
+    const data = {
+      fullName: formData.get('fullName'),
+      email: formData.get('email'),
+      company: formData.get('company'),
+      role: formData.get('role'),
+    };
+
+    try {
+      const response = await fetch('http://localhost:3001/api/leads', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (response.ok) {
+        setFormSubmitted(true);
+      } else {
+        alert('Erro ao enviar o formulário. Por favor, tente novamente.');
+      }
+    } catch (error) {
+      console.error('Erro ao enviar lead:', error);
+      alert('Não foi possível conectar ao servidor. Verifique se o backend está rodando.');
+    }
   };
 
   return (
@@ -859,6 +884,7 @@ export default function App() {
                   <input
                     type="text"
                     id="fullName"
+                    name="fullName"
                     required
                     placeholder="Ex: João Silva"
                     className="bg-white border border-gray-300 text-gray-900 rounded-xl px-4 py-3.5 focus:ring-2 focus:ring-[#009a93] focus:border-transparent outline-none transition-all w-full"
@@ -871,6 +897,7 @@ export default function App() {
                   <input
                     type="email"
                     id="email"
+                    name="email"
                     required
                     placeholder="joao@suaempresa.com.br"
                     className="bg-white border border-gray-300 text-gray-900 rounded-xl px-4 py-3.5 focus:ring-2 focus:ring-[#009a93] focus:border-transparent outline-none transition-all w-full"
@@ -883,6 +910,7 @@ export default function App() {
                   <input
                     type="text"
                     id="company"
+                    name="company"
                     required
                     placeholder="Sua Empresa"
                     className="bg-white border border-gray-300 text-gray-900 rounded-xl px-4 py-3.5 focus:ring-2 focus:ring-[#009a93] focus:border-transparent outline-none transition-all w-full"
@@ -895,6 +923,7 @@ export default function App() {
                   <input
                     type="text"
                     id="role"
+                    name="role"
                     required
                     placeholder="Ex: Diretor, Gerente"
                     className="bg-white border border-gray-300 text-gray-900 rounded-xl px-4 py-3.5 focus:ring-2 focus:ring-[#009a93] focus:border-transparent outline-none transition-all w-full"
