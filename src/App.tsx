@@ -1,11 +1,8 @@
-/**
- * @license
- * SPDX-License-Identifier: Apache-2.0
- */
-
+import React, { useState } from 'react';
 import { Rocket, LineChart, Target, Check, ArrowUpRight, Database, Eye, Send, Lightbulb, ClipboardList, Search, TrendingUp, Instagram, Facebook, Linkedin } from 'lucide-react';
 import { motion } from 'motion/react';
 import BrandGlow from './components/BrandGlow';
+import { siteConfig } from './config/siteConfig';
 
 const fadeInUp = {
   initial: { opacity: 0, y: 40 },
@@ -35,6 +32,13 @@ const staggerItem = {
 };
 
 export default function App() {
+  const [formSubmitted, setFormSubmitted] = useState(false);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormSubmitted(true);
+  };
+
   return (
     <div className="font-sans text-[#1d1d30]">
       {/* Hero Section */}
@@ -52,12 +56,12 @@ export default function App() {
 
         {/* Header */}
         <header className="w-full max-w-7xl mx-auto px-6 py-6 flex items-center justify-between relative z-10">
-          <img src="/nortyn-bco.png" alt="Nortyn" className="h-8 md:h-10 w-auto" />
+          <img src="/nortyn-bco.png" alt="Nortyn" className="h-[44px] w-auto" />
 
           <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-white/80">
-            <a href="#empresa" className="hover:text-[#00a99d] transition-colors">Empresa</a>
-            <a href="#beneficios" className="hover:text-[#00a99d] transition-colors">Benefícios</a>
-            <a href="#sobre-nos" className="hover:text-[#00a99d] transition-colors">Sobre nós</a>
+            {siteConfig.navigation.map((item) => (
+              <a key={item.href} href={item.href} className="hover:text-[#00a99d] transition-colors">{item.label}</a>
+            ))}
           </nav>
 
           <a href="#demonstracao" className="bg-[#009a93] text-white px-6 py-2.5 rounded-lg font-semibold text-lg transition-all duration-300 hover:opacity-90 hover:scale-105 shadow-md">
@@ -71,23 +75,23 @@ export default function App() {
           className="flex-1 flex flex-col items-center text-center px-6 pt-16 md:pt-24 pb-0 max-w-6xl mx-auto w-full relative z-10"
         >
           <span className="text-sm font-light tracking-[0.6em] uppercase mb-6 text-[#00a99d] opacity-90 ml-[0.6em]">
-            GESTÃO COMERCIAL INTELIGENTE
+            {siteConfig.hero.badge}
           </span>
 
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold font-atkinson leading-[1.1] mb-6 text-white tracking-[-0.02em] max-w-4xl">
-            Oriente suas decisões comerciais com dados claros e controle total das metas.
+            {siteConfig.hero.title}
           </h1>
 
           <p className="text-lg md:text-xl text-gray-400 mb-10 max-w-3xl">
-            Transforme os dados do seu ERP ou das suas planilhas em painéis de decisão para indústrias que precisam agir com previsibilidade.
+            {siteConfig.hero.subtitle}
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16 z-10 w-full">
             <a href="#demonstracao" className="bg-gradient-to-r from-[#00a99d] to-[#2e3192] text-white px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-300 hover:opacity-90 hover:scale-105 shadow-xl w-full sm:w-auto text-center">
-              Agendar demonstração personalizada
+              {siteConfig.hero.primaryCta}
             </a>
             <a href="#beneficios" className="border-2 border-white/20 text-white bg-transparent px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-300 hover:bg-white/10 hover:scale-105 w-full sm:w-auto text-center">
-              Ver benefícios
+              {siteConfig.hero.secondaryCta}
             </a>
           </div>
 
@@ -510,7 +514,7 @@ export default function App() {
             initial="initial"
             whileInView="whileInView"
             viewport={{ once: true, margin: "-100px" }}
-            className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6"
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
           >
 
             {/* Card 1 (Hero Vertical) */}
@@ -729,13 +733,10 @@ export default function App() {
           </motion.div>
 
           {/* Footer Buttons */}
-          <div className="mt-16 flex flex-col sm:flex-row justify-center items-center gap-4">
+          <div className="mt-16 flex justify-center">
             <a href="#demonstracao" className="bg-gradient-to-r from-[#312783] to-[#009a93] text-white px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-300 hover:opacity-90 hover:scale-105 shadow-md w-full sm:w-auto text-center">
               Solicitar demonstração
             </a>
-            <button className="border-2 border-gray-900 text-gray-900 px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-300 hover:bg-gray-100 hover:scale-105 w-full sm:w-auto">
-              Ver em passos
-            </button>
           </div>
         </motion.div>
       </section>
@@ -746,75 +747,96 @@ export default function App() {
         <motion.div {...fadeInUp} className="max-w-6xl w-full mx-auto flex flex-col lg:flex-row rounded-[2rem] overflow-hidden shadow-2xl shadow-black/40">
 
           {/* Left Column (Background Image) */}
-          <div
-            className="w-full lg:w-1/2 min-h-[450px] lg:min-h-full relative overflow-hidden group bg-cover bg-center"
-            style={{ backgroundImage: "url('/img-form.png')" }}
-          >
-            {/* Background Image only */}
+          <div className="w-full lg:w-1/2 bg-[#312783] flex items-center justify-center overflow-hidden">
+            <img
+              src="/img-form.png"
+              alt="Nortyn App"
+              className="w-full h-full object-contain lg:object-cover"
+            />
           </div>
 
           {/* Right Column (B2B Form) */}
           <div className="w-full lg:w-1/2 bg-white p-8 md:p-12 lg:p-16 flex flex-col justify-center">
             <h2 className="text-4xl md:text-5xl font-bold font-atkinson text-[#1d1d30] leading-tight mb-2">
-              Agende sua demonstração
+              {siteConfig.form.title}
             </h2>
             <p className="text-gray-500 mb-10">
-              Descubra como a Nortyn pode dar previsibilidade total para as metas da sua equipe.
+              {siteConfig.form.subtitle}
             </p>
 
-            <form className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              {/* Full Name */}
-              <div className="col-span-full">
-                <label htmlFor="fullName" className="block text-sm font-semibold text-gray-700 mb-1.5">Nome completo</label>
-                <input
-                  type="text"
-                  id="fullName"
-                  placeholder="Ex: João Silva"
-                  className="bg-white border border-gray-300 text-gray-900 rounded-xl px-4 py-3.5 focus:ring-2 focus:ring-[#009a93] focus:border-transparent outline-none transition-all w-full"
-                />
-              </div>
-
-              {/* Corporate Email */}
-              <div className="col-span-full">
-                <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-1.5">E-mail corporativo</label>
-                <input
-                  type="email"
-                  id="email"
-                  placeholder="joao@suaempresa.com.br"
-                  className="bg-white border border-gray-300 text-gray-900 rounded-xl px-4 py-3.5 focus:ring-2 focus:ring-[#009a93] focus:border-transparent outline-none transition-all w-full"
-                />
-              </div>
-
-              {/* Company */}
-              <div>
-                <label htmlFor="company" className="block text-sm font-semibold text-gray-700 mb-1.5">Nome da Empresa</label>
-                <input
-                  type="text"
-                  id="company"
-                  placeholder="Sua Empresa"
-                  className="bg-white border border-gray-300 text-gray-900 rounded-xl px-4 py-3.5 focus:ring-2 focus:ring-[#009a93] focus:border-transparent outline-none transition-all w-full"
-                />
-              </div>
-
-              {/* Role */}
-              <div>
-                <label htmlFor="role" className="block text-sm font-semibold text-gray-700 mb-1.5">Cargo</label>
-                <input
-                  type="text"
-                  id="role"
-                  placeholder="Ex: Diretor, Gerente"
-                  className="bg-white border border-gray-300 text-gray-900 rounded-xl px-4 py-3.5 focus:ring-2 focus:ring-[#009a93] focus:border-transparent outline-none transition-all w-full"
-                />
-              </div>
-
-              {/* Submit Button */}
-              <button
-                type="button"
-                className="col-span-full w-full mt-4 bg-[#009a93] text-white font-semibold text-lg rounded-lg py-4 transition-all duration-300 hover:scale-[1.03] hover:bg-[#00807a]"
+            {formSubmitted ? (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="bg-[#f0fdfa] border border-[#009a93]/20 p-8 rounded-2xl text-center"
               >
-                Solicitar demonstração
-              </button>
-            </form>
+                <div className="w-16 h-16 bg-[#009a93] rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-[#009a93]/20">
+                  <Check className="text-white w-8 h-8" strokeWidth={3} />
+                </div>
+                <h3 className="text-2xl font-bold text-[#1d1d30] mb-4">{siteConfig.form.successMessage.title}</h3>
+                <p className="text-gray-600 leading-relaxed">
+                  {siteConfig.form.successMessage.content}
+                </p>
+              </motion.div>
+            ) : (
+              <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                {/* Full Name */}
+                <div className="col-span-full">
+                  <label htmlFor="fullName" className="block text-sm font-semibold text-gray-700 mb-1.5">Nome completo</label>
+                  <input
+                    type="text"
+                    id="fullName"
+                    required
+                    placeholder="Ex: João Silva"
+                    className="bg-white border border-gray-300 text-gray-900 rounded-xl px-4 py-3.5 focus:ring-2 focus:ring-[#009a93] focus:border-transparent outline-none transition-all w-full"
+                  />
+                </div>
+
+                {/* Corporate Email */}
+                <div className="col-span-full">
+                  <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-1.5">E-mail corporativo</label>
+                  <input
+                    type="email"
+                    id="email"
+                    required
+                    placeholder="joao@suaempresa.com.br"
+                    className="bg-white border border-gray-300 text-gray-900 rounded-xl px-4 py-3.5 focus:ring-2 focus:ring-[#009a93] focus:border-transparent outline-none transition-all w-full"
+                  />
+                </div>
+
+                {/* Company */}
+                <div>
+                  <label htmlFor="company" className="block text-sm font-semibold text-gray-700 mb-1.5">Nome da Empresa</label>
+                  <input
+                    type="text"
+                    id="company"
+                    required
+                    placeholder="Sua Empresa"
+                    className="bg-white border border-gray-300 text-gray-900 rounded-xl px-4 py-3.5 focus:ring-2 focus:ring-[#009a93] focus:border-transparent outline-none transition-all w-full"
+                  />
+                </div>
+
+                {/* Role */}
+                <div>
+                  <label htmlFor="role" className="block text-sm font-semibold text-gray-700 mb-1.5">Cargo</label>
+                  <input
+                    type="text"
+                    id="role"
+                    required
+                    placeholder="Ex: Diretor, Gerente"
+                    className="bg-white border border-gray-300 text-gray-900 rounded-xl px-4 py-3.5 focus:ring-2 focus:ring-[#009a93] focus:border-transparent outline-none transition-all w-full"
+                  />
+                </div>
+
+                {/* Submit Button */}
+                <button
+                  type="submit"
+                  className="col-span-full w-full mt-4 bg-[#009a93] text-white font-semibold text-lg rounded-lg py-4 transition-all duration-300 hover:scale-[1.03] hover:bg-[#00807a]"
+                >
+                  {siteConfig.form.buttonText}
+                </button>
+              </form>
+            )}
 
             {/* Trust Footer */}
             <p className="text-xs text-gray-400 text-center mt-6">
@@ -918,18 +940,18 @@ export default function App() {
         <div className="max-w-7xl mx-auto px-4 py-16 grid grid-cols-1 md:grid-cols-4 gap-12 md:gap-8">
           {/* Column 1 (Marca e Redes Sociais) */}
           <div className="md:col-span-2">
-            <img src="/nortyn-bco.png" alt="Nortyn" className="h-10 md:h-12 w-auto mb-6 block" />
+            <img src="/nortyn-bco.png" alt={siteConfig.name} className="h-[55px] w-auto mb-6 block" />
             <p className="text-white/80 text-lg mb-8 max-w-sm">
-              Orienta decisões que importam.
+              {siteConfig.footer.tagline}
             </p>
             <div className="flex items-center gap-5">
-              <a href="#" className="text-white hover:text-[#009a93] transition-colors">
+              <a href={siteConfig.socialLinks.instagram} className="text-white hover:text-[#009a93] transition-colors">
                 <Instagram className="w-6 h-6" />
               </a>
-              <a href="#" className="text-white hover:text-[#009a93] transition-colors">
+              <a href={siteConfig.socialLinks.facebook} className="text-white hover:text-[#009a93] transition-colors">
                 <Facebook className="w-6 h-6" />
               </a>
-              <a href="#" className="text-white hover:text-[#009a93] transition-colors">
+              <a href={siteConfig.socialLinks.linkedin} className="text-white hover:text-[#009a93] transition-colors">
                 <Linkedin className="w-6 h-6" />
               </a>
             </div>
@@ -938,9 +960,9 @@ export default function App() {
           <div>
             <h3 className="text-lg font-semibold text-white mb-6">Menu</h3>
             <ul className="flex flex-col gap-4">
-              <li><a href="#empresa" className="text-white/70 hover:text-white transition-colors text-sm">Empresa</a></li>
-              <li><a href="#beneficios" className="text-white/70 hover:text-white transition-colors text-sm">Benefícios</a></li>
-              <li><a href="#sobre-nos" className="text-white/70 hover:text-white transition-colors text-sm">Sobre nós</a></li>
+              {siteConfig.navigation.map((item) => (
+                <li key={item.href}><a href={item.href} className="text-white/70 hover:text-white transition-colors text-sm">{item.label}</a></li>
+              ))}
               <li><a href="#demonstracao" className="text-white/70 hover:text-white transition-colors text-sm">Agendar Demonstração</a></li>
             </ul>
           </div>
@@ -949,7 +971,7 @@ export default function App() {
           <div>
             <h3 className="text-lg font-semibold text-white mb-6">Contato</h3>
             <ul className="flex flex-col gap-4">
-              <li><a href="mailto:contato@nortyn.com.br" className="text-white/70 hover:text-white transition-colors text-sm">contato@nortyn.com.br</a></li>
+              <li><a href={`mailto:${siteConfig.contact.email}`} className="text-white/70 hover:text-white transition-colors text-sm">{siteConfig.contact.email}</a></li>
               <li><a href="#" className="text-white/70 hover:text-white transition-colors text-sm">Termos de Uso</a></li>
               <li><a href="#" className="text-white/70 hover:text-white transition-colors text-sm">Política de Privacidade</a></li>
             </ul>
@@ -959,7 +981,7 @@ export default function App() {
         {/* Faixa Inferior de Copyright */}
         <div className="w-full bg-[#009a93] py-4 px-4 text-center">
           <p className="text-sm text-white font-medium">
-            © 2026 Nortyn. Todos os direitos reservados.
+            {siteConfig.footer.copyright}
           </p>
         </div>
       </footer>
