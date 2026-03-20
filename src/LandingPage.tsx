@@ -122,7 +122,7 @@ export default function LandingPage() {
         {/* Esquerda: Logo & Tagline */}
         <div className="flex flex-col">
           <a href="#" className="flex items-center gap-2">
-            <img src="/nortyn-logo.png" alt="Nortyn" className="h-10 md:h-12 w-auto" />
+            <img src="/nortyn-bco.png" alt="Nortyn" className="h-10 md:h-12 w-auto" />
           </a>
         </div>
 
