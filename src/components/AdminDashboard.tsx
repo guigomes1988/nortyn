@@ -59,7 +59,7 @@ export default function AdminDashboard() {
   const fetchTestimonials = async () => {
     setIsTestimonialsLoading(true);
     try {
-      const response = await fetch('http://localhost:3001/api/testimonials');
+      const response = await fetch('/api/testimonials');
       if (response.ok) {
         const data = await response.json();
         setTestimonials(data);
@@ -78,8 +78,8 @@ export default function AdminDashboard() {
 
     try {
       const url = editingTestimonial.id 
-        ? `http://localhost:3001/api/testimonials/${editingTestimonial.id}`
-        : 'http://localhost:3001/api/testimonials';
+        ? `/api/testimonials/${editingTestimonial.id}`
+        : '/api/testimonials';
       
       const method = editingTestimonial.id ? 'PUT' : 'POST';
 
@@ -110,7 +110,7 @@ export default function AdminDashboard() {
     if (!window.confirm('Tem certeza que deseja excluir este depoimento?')) return;
 
     try {
-      const response = await fetch(`http://localhost:3001/api/testimonials/${id}`, {
+      const response = await fetch(`/api/testimonials/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -129,7 +129,7 @@ export default function AdminDashboard() {
   const fetchSocialLinks = async () => {
     setIsSocialsLoading(true);
     try {
-      const response = await fetch('http://localhost:3001/api/social-links');
+      const response = await fetch('/api/social-links');
       if (response.ok) {
         const data = await response.json();
         setSocialLinks(data);
@@ -143,7 +143,7 @@ export default function AdminDashboard() {
 
   const handleUpdateSocialLink = async (id: number, url: string, is_active: boolean) => {
     try {
-      const response = await fetch(`http://localhost:3001/api/social-links/${id}`, {
+      const response = await fetch(`/api/social-links/${id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -169,7 +169,7 @@ export default function AdminDashboard() {
     setMessage({ text: '', type: '' });
 
     try {
-      const response = await fetch('http://localhost:3001/api/auth/user', {
+      const response = await fetch('/api/auth/user', {
         method: 'PUT',
         headers: { 
           'Content-Type': 'application/json',

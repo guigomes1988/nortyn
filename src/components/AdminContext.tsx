@@ -47,7 +47,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
 
   const fetchUser = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/auth/me', {
+      const response = await fetch('/api/auth/me', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (response.ok) {
@@ -82,7 +82,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
 
   const fetchContent = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/content');
+      const response = await fetch('/api/content');
       if (response.ok) {
         const data = await response.json();
         setSiteContent(data);
@@ -101,7 +101,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     if (!token) return;
     setIsSaving(true);
     try {
-      const response = await fetch('http://localhost:3001/api/content/upsert', {
+      const response = await fetch('/api/content/upsert', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',

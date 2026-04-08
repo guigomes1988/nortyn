@@ -20,7 +20,7 @@ export default function LandingPage() {
   useEffect(() => {
     const fetchSocialLinks = async () => {
       try {
-        const response = await fetch('http://localhost:3001/api/social-links');
+        const response = await fetch('/api/social-links');
         if (response.ok) {
           const data = await response.json();
           setSocialLinks(data);
@@ -77,7 +77,7 @@ export default function LandingPage() {
     setStatus('loading');
 
     try {
-      const response = await fetch('http://localhost:3001/api/leads', {
+      const response = await fetch('/api/leads', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
