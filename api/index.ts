@@ -159,6 +159,7 @@ app.post('/api/auth/login', async (req, res) => {
   if (!email || !password) return res.status(400).json({ error: 'Email and password required' });
 
   try {
+    if (!sql) throw new Error("DATABASE_URL não configurada no ambiente da Vercel!");
     const users = await sql`SELECT * FROM users WHERE email = ${email}`;
     if (users.length === 0) return res.status(401).json({ error: 'Invalid credentials' });
 
@@ -169,8 +170,8 @@ app.post('/api/auth/login', async (req, res) => {
 
     const token = jwt.sign({ id: user.id, email: user.email }, JWT_SECRET, { expiresIn: '24h' });
     res.json({ token, user: { id: user.id, name: user.name, email: user.email } });
-  } catch (error) {
-    res.status(500).json({ error: 'Server error' });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message || 'Server error' });
   }
 });
 
@@ -212,11 +213,12 @@ app.put('/api/auth/user', authenticateToken, async (req: any, res: any) => {
 // --- TESTIMONIALS ENDPOINTS ---
 app.get('/api/testimonials', async (req, res) => {
   try {
+    if (!sql) throw new Error("A variável de ambiente DATABASE_URL não está configurada na Vercel!");
     const rows = await sql`SELECT * FROM testimonials ORDER BY id ASC`;
     res.json(rows);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error fetching testimonials:', error);
-    res.status(500).json({ error: 'Internal server error' });
+    res.status(500).json({ error: error.message || 'Internal server error' });
   }
 });
 
