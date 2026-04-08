@@ -14,10 +14,15 @@ const JWT_SECRET = process.env.JWT_SECRET || 'nortyn_super_secret_jwt_key';
 app.use(cors());
 app.use(express.json());
 
-const sql = neon(process.env.DATABASE_URL!);
+const databaseUrl = process.env.DATABASE_URL || '';
+const sql = databaseUrl ? neon(databaseUrl) : null as any;
 
 // Initialize database
 async function initDB() {
+  if (!sql) {
+    console.error("DATABASE_URL is not set. Database not initialized.");
+    return;
+  }
   try {
     // Leads table
     await sql`

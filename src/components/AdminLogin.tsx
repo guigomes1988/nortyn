@@ -24,7 +24,12 @@ export default function AdminLogin() {
         body: JSON.stringify({ email, password })
       });
 
-      const data = await response.json();
+      let data;
+      try {
+        data = await response.json();
+      } catch (parseError) {
+        throw new Error(`O servidor retornou um erro inesperado (Status: ${response.status}). Possível falha interna na Vercel.`);
+      }
 
       if (response.ok) {
         login(data.token, data.user);
@@ -32,8 +37,9 @@ export default function AdminLogin() {
       } else {
         setError(data.error || 'Credenciais inválidas');
       }
-    } catch (err) {
-      setError('Erro ao conectar com o servidor.');
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || 'Erro ao conectar com o servidor.');
     } finally {
       setIsLoading(false);
     }
