@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAdmin } from './AdminContext';
 import { 
-  Loader2, LogOut, Layout, User as UserIcon, Lock, CheckCircle2, 
-  ChevronRight, ExternalLink, Settings, Home, FileText, MessageSquare, Plus, Trash2, Edit2, X
+  Loader2, LogOut, User as UserIcon, Lock, CheckCircle2, 
+  ChevronRight, ExternalLink, Settings, Home, FileText, MessageSquare, Plus, Trash2, Edit2, X,
+  Image as ImageIcon, Code, Users as UsersIcon, Globe, Link as LinkIcon, Upload,
+  Eye, EyeOff
 } from 'lucide-react';
 import BrandGlow from './BrandGlow';
 
-type Tab = 'pages' | 'testimonials' | 'settings';
+type Tab = 'testimonials' | 'gallery' | 'settings' | 'users';
 
 interface SocialLink {
   id: number;
@@ -24,11 +26,25 @@ interface Testimonial {
   avatar_url: string;
 }
 
+interface GalleryImage {
+  id: number;
+  url: string;
+  alt: string;
+  display_order: number;
+}
+
+interface AdminUser {
+  id: number;
+  name: string;
+  email: string;
+  created_at: string;
+}
+
 export default function AdminDashboard() {
-  const { user, token, logout, setIsVisualEditing, fetchUser } = useAdmin();
+  const { user, token, logout, fetchUser } = useAdmin();
   const navigate = useNavigate();
 
-  const [activeTab, setActiveTab] = useState<Tab>('pages');
+  const [activeTab, setActiveTab] = useState<Tab>('testimonials');
   const [name, setName] = useState(user?.name || '');
   const [email, setEmail] = useState(user?.email || '');
   const [password, setPassword] = useState('');
@@ -45,15 +61,37 @@ export default function AdminDashboard() {
   // Social Links State
   const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
   const [isSocialsLoading, setIsSocialsLoading] = useState(false);
-  const [isSavingSocials, setIsSavingSocials] = useState(false);
+
+  // Gallery State
+  const [galleryImages, setGalleryImages] = useState<GalleryImage[]>([]);
+  const [isGalleryLoading, setIsGalleryLoading] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+
+  // Settings State (Webhook, Scripts)
+  const [appSettings, setAppSettings] = useState<Record<string, string>>({
+    webhook_url: '',
+    head_scripts: '',
+    body_scripts: ''
+  });
+  const [isSettingsLoading, setIsSettingsLoading] = useState(false);
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
+
+  // Users State
+  const [adminUsers, setAdminUsers] = useState<AdminUser[]>([]);
+  const [isUsersLoading, setIsUsersLoading] = useState(false);
+  const [isCreatingUser, setIsCreatingUser] = useState(false);
+  const [newUser, setNewUser] = useState({ name: '', email: '', password: '' });
 
   useEffect(() => {
-    if (activeTab === 'testimonials') {
-      fetchTestimonials();
-    }
+    if (activeTab === 'testimonials') fetchTestimonials();
+    if (activeTab === 'gallery') fetchGallery();
     if (activeTab === 'settings') {
-      fetchSocialLinks();
+      fetchAppSettings();
     }
+    if (activeTab === 'users') fetchAdminUsers();
   }, [activeTab]);
 
   const fetchTestimonials = async () => {
@@ -126,40 +164,169 @@ export default function AdminDashboard() {
     }
   };
 
-  const fetchSocialLinks = async () => {
-    setIsSocialsLoading(true);
+  const fetchGallery = async () => {
+    setIsGalleryLoading(true);
     try {
-      const response = await fetch('/api/social-links');
+      const response = await fetch('/api/gallery');
       if (response.ok) {
         const data = await response.json();
-        setSocialLinks(data);
+        setGalleryImages(data);
       }
     } catch (err) {
-      console.error('Error fetching social links:', err);
+      console.error('Error fetching gallery:', err);
     } finally {
-      setIsSocialsLoading(false);
+      setIsGalleryLoading(false);
     }
   };
 
-  const handleUpdateSocialLink = async (id: number, url: string, is_active: boolean) => {
+  const handleAddGalleryImage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedFile) return;
+    
+    setIsUploadingImage(true);
+    const formData = new FormData();
+    formData.append('image', selectedFile);
+    formData.append('alt', 'Slideshow Image');
+
     try {
-      const response = await fetch(`/api/social-links/${id}`, {
-        method: 'PUT',
+      const response = await fetch('/api/gallery/upload', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
+      if (response.ok) {
+        setSelectedFile(null);
+        // Reset file input
+        const fileInput = document.getElementById('gallery-upload') as HTMLInputElement;
+        if (fileInput) fileInput.value = '';
+        
+        fetchGallery();
+        setMessage({ text: 'Imagem carregada com sucesso!', type: 'success' });
+      } else {
+        setMessage({ text: 'Erro ao carregar imagem.', type: 'error' });
+      }
+    } catch (err) {
+      setMessage({ text: 'Erro ao conectar com o servidor.', type: 'error' });
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
+
+  const handleDeleteGalleryImage = async (id: number) => {
+    try {
+      const response = await fetch(`/api/gallery/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        fetchGallery();
+        setMessage({ text: 'Imagem removida.', type: 'success' });
+      }
+    } catch (err) {
+      setMessage({ text: 'Erro ao remover imagem.', type: 'error' });
+    }
+  };
+
+  const fetchAppSettings = async () => {
+    setIsSettingsLoading(true);
+    try {
+      const response = await fetch('/api/settings');
+      if (response.ok) {
+        const data = await response.json();
+        setAppSettings(data);
+      }
+    } catch (err) {
+      console.error('Error fetching settings:', err);
+    } finally {
+      setIsSettingsLoading(false);
+    }
+  };
+
+  const handleSaveAppSettings = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSavingSettings(true);
+    try {
+      const response = await fetch('/api/settings', {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ url, is_active })
+        body: JSON.stringify({ settings: appSettings })
       });
-
       if (response.ok) {
-        setSocialLinks(prev => prev.map(link => link.id === id ? { ...link, url, is_active } : link));
-        return true;
+        setMessage({ text: 'Configurações salvas com sucesso!', type: 'success' });
       }
-      return false;
     } catch (err) {
-      console.error('Error updating social link:', err);
-      return false;
+      setMessage({ text: 'Erro ao salvar configurações.', type: 'error' });
+    } finally {
+      setIsSavingSettings(false);
+    }
+  };
+
+  const fetchAdminUsers = async () => {
+    setIsUsersLoading(true);
+    try {
+      const response = await fetch('/api/users', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setAdminUsers(data);
+      }
+    } catch (err) {
+      console.error('Error fetching users:', err);
+    } finally {
+      setIsUsersLoading(false);
+    }
+  };
+
+  const handleCreateUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsCreatingUser(true);
+    try {
+      const response = await fetch('/api/users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(newUser)
+      });
+      if (response.ok) {
+        setNewUser({ name: '', email: '', password: '' });
+        fetchAdminUsers();
+        setMessage({ text: 'Novo administrador criado!', type: 'success' });
+      } else {
+        const data = await response.json();
+        setMessage({ text: data.error || 'Erro ao criar usuário', type: 'error' });
+      }
+    } catch (err) {
+      setMessage({ text: 'Erro ao conectar com o servidor.', type: 'error' });
+    } finally {
+      setIsCreatingUser(false);
+    }
+  };
+
+  const handleDeleteUser = async (id: number) => {
+    if (id === user?.id) {
+      setMessage({ text: 'Você não pode excluir seu próprio usuário.', type: 'error' });
+      return;
+    }
+    if (!window.confirm('Tem certeza que deseja excluir este administrador?')) return;
+    try {
+      const response = await fetch(`/api/users/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        fetchAdminUsers();
+        setMessage({ text: 'Administrador removido.', type: 'success' });
+      }
+    } catch (err) {
+      setMessage({ text: 'Erro ao remover usuário.', type: 'error' });
     }
   };
 
@@ -193,14 +360,40 @@ export default function AdminDashboard() {
     }
   };
 
-  const startVisualEditing = (path: string) => {
-    setIsVisualEditing(true);
-    navigate(path);
-  };
-
   const handleLogout = () => {
     logout();
     navigate('/admin/login');
+  };
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingAvatar(true);
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+      const response = await fetch('/api/testimonials/upload', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
+        body: formData
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        setEditingTestimonial({ ...editingTestimonial, avatar_url: data.url });
+        setMessage({ text: 'Avatar carregado!', type: 'success' });
+      } else {
+        setMessage({ text: 'Erro ao carregar avatar.', type: 'error' });
+      }
+    } catch (err) {
+      setMessage({ text: 'Erro na conexão.', type: 'error' });
+    } finally {
+      setIsUploadingAvatar(false);
+    }
   };
 
   return (
@@ -212,21 +405,11 @@ export default function AdminDashboard() {
 
       {/* Sidebar */}
       <aside className="w-64 bg-[#0B091E]/80 backdrop-blur-xl border-r border-white/5 flex flex-col z-20">
-        <div className="p-6 border-b border-white/5 flex items-center gap-3">
-          <div className="w-8 h-8 bg-nortyn-secondary rounded-lg flex items-center justify-center">
-            <Layout className="w-5 h-5 text-white" />
-          </div>
-          <span className="font-bold text-lg tracking-tight">Painel Admin</span>
+        <div className="p-8 border-b border-white/5 flex items-center justify-center">
+          <img src="/nortyn-bco.png" alt="Nortyn Logo" className="h-10 w-auto" />
         </div>
 
         <nav className="flex-1 p-4 flex flex-col gap-2">
-          <button 
-            onClick={() => setActiveTab('pages')}
-            className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === 'pages' ? 'bg-nortyn-secondary text-white shadow-lg shadow-nortyn-secondary/20' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
-          >
-            <FileText className="w-5 h-5" />
-            <span className="font-medium">Páginas</span>
-          </button>
           <button 
             onClick={() => setActiveTab('testimonials')}
             className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === 'testimonials' ? 'bg-nortyn-secondary text-white shadow-lg shadow-nortyn-secondary/20' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
@@ -235,11 +418,25 @@ export default function AdminDashboard() {
             <span className="font-medium">Depoimentos</span>
           </button>
           <button 
+            onClick={() => setActiveTab('gallery')}
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === 'gallery' ? 'bg-nortyn-secondary text-white shadow-lg shadow-nortyn-secondary/20' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+          >
+            <ImageIcon className="w-5 h-5" />
+            <span className="font-medium">Galeria</span>
+          </button>
+          <button 
             onClick={() => setActiveTab('settings')}
             className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === 'settings' ? 'bg-nortyn-secondary text-white shadow-lg shadow-nortyn-secondary/20' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
           >
             <Settings className="w-5 h-5" />
             <span className="font-medium">Configurações</span>
+          </button>
+          <button 
+            onClick={() => setActiveTab('users')}
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === 'users' ? 'bg-nortyn-secondary text-white shadow-lg shadow-nortyn-secondary/20' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+          >
+            <UsersIcon className="w-5 h-5" />
+            <span className="font-medium">Usuários</span>
           </button>
         </nav>
 
@@ -268,10 +465,10 @@ export default function AdminDashboard() {
         <header className="px-8 py-6 border-b border-white/5 flex items-center justify-between sticky top-0 bg-[#060515]/60 backdrop-blur-md z-30">
           <div>
             <h1 className="text-2xl font-bold">
-              {activeTab === 'pages' ? 'Gerenciamento de Páginas' : activeTab === 'testimonials' ? 'Depoimentos dos Clientes' : 'Configurações Gerais'}
+              {activeTab === 'testimonials' ? 'Depoimentos' : activeTab === 'gallery' ? 'Galeria Slideshow' : activeTab === 'users' ? 'Gestão de Usuários' : 'Configurações'}
             </h1>
             <p className="text-sm text-gray-400">
-              {activeTab === 'pages' ? 'Selecione uma página para editar o conteúdo visualmente.' : activeTab === 'testimonials' ? 'Gerencie os depoimentos que aparecem na página institucional.' : 'Gerencie seu perfil e links de redes sociais.'}
+              {activeTab === 'testimonials' ? 'Gerencie os depoimentos dos clientes.' : activeTab === 'gallery' ? 'Adicione imagens para o carrossel da página.' : activeTab === 'users' ? 'Administre os usuários do painel.' : 'Gerencie configurações, perfil e integrações.'}
             </p>
           </div>
           {activeTab === 'testimonials' && (
@@ -294,90 +491,16 @@ export default function AdminDashboard() {
             </div>
           )}
 
-          {activeTab === 'pages' && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Nortyn LP Card */}
-              <div className="bg-[#0B091E]/60 border border-white/10 rounded-3xl overflow-hidden group hover:border-nortyn-secondary/50 transition-all shadow-xl backdrop-blur-sm">
-                <div className="h-40 bg-gradient-to-br from-[#312783] to-[#01031b] relative overflow-hidden flex items-center justify-center">
-                  <img src="/nortyn-bco.png" className="h-10 opacity-30 group-hover:opacity-60 transition-opacity" alt="Nortyn" />
-                  <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors"></div>
-                </div>
-                <div className="p-6">
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-xl font-bold">Institucional Nortyn</h3>
-                    <span className="text-[10px] bg-nortyn-secondary/20 text-nortyn-secondary px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">Página Inicial</span>
-                  </div>
-                  <p className="text-sm text-gray-400 mb-6 flex items-center gap-1">
-                    <Home className="w-3 h-3" /> /
-                  </p>
-                  <div className="flex gap-3">
-                    <button 
-                      onClick={() => startVisualEditing('/')}
-                      className="flex-1 bg-nortyn-secondary hover:bg-[#00b3ab] text-white font-bold py-3 px-4 rounded-xl transition-all shadow-lg shadow-nortyn-secondary/20 flex items-center justify-center gap-2"
-                    >
-                      <Layout className="w-4 h-4" />
-                      Edição Visual
-                    </button>
-                    <a href="/" target="_blank" className="p-3 bg-white/5 hover:bg-white/10 rounded-xl transition-all text-gray-400 hover:text-white" title="Ver site">
-                      <ExternalLink className="w-5 h-5" />
-                    </a>
-                  </div>
-                </div>
-              </div>
-
-              {/* Diagnostico Card */}
-              <div className="bg-[#0B091E]/60 border border-white/10 rounded-3xl overflow-hidden group hover:border-nortyn-secondary/50 transition-all shadow-xl backdrop-blur-sm">
-                <div className="h-40 bg-gradient-to-br from-[#00a99d]/40 to-[#01031b] relative overflow-hidden flex items-center justify-center">
-                  <img src="/nortyn-bco.png" className="h-10 opacity-30 group-hover:opacity-60 transition-opacity" alt="Nortyn" />
-                  <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors"></div>
-                </div>
-                <div className="p-6">
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-xl font-bold">Diagnóstico de Vendas</h3>
-                    <span className="text-[10px] bg-white/10 text-gray-400 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">LP Secundária</span>
-                  </div>
-                  <p className="text-sm text-gray-400 mb-6 flex items-center gap-1">
-                    <FileText className="w-3 h-3" /> /diagnostico
-                  </p>
-                  <div className="flex gap-3">
-                    <button 
-                      onClick={() => startVisualEditing('/diagnostico')}
-                      className="flex-1 bg-nortyn-secondary hover:bg-[#00b3ab] text-white font-bold py-3 px-4 rounded-xl transition-all shadow-lg shadow-nortyn-secondary/20 flex items-center justify-center gap-2"
-                    >
-                      <Layout className="w-4 h-4" />
-                      Edição Visual
-                    </button>
-                    <a href="/diagnostico" target="_blank" className="p-3 bg-white/5 hover:bg-white/10 rounded-xl transition-all text-gray-400 hover:text-white" title="Ver site">
-                      <ExternalLink className="w-5 h-5" />
-                    </a>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
           {activeTab === 'testimonials' && (
             <div className="flex flex-col gap-6">
               {isTestimonialsLoading ? (
                 <div className="flex items-center justify-center py-20">
                   <Loader2 className="w-10 h-10 animate-spin text-nortyn-secondary opacity-50" />
                 </div>
-              ) : testimonials.length === 0 ? (
-                <div className="bg-[#0B091E]/60 border border-dashed border-white/10 rounded-3xl p-12 text-center backdrop-blur-sm">
-                  <MessageSquare className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-                  <h3 className="text-xl font-bold mb-2">Nenhum depoimento encontrado</h3>
-                  <p className="text-gray-400 mb-6">Comece adicionando o primeiro depoimento para sua página institucional.</p>
-                  <button 
-                    onClick={() => setEditingTestimonial({})}
-                    className="bg-nortyn-secondary hover:bg-[#00b3ab] text-white px-6 py-3 rounded-xl transition-all font-bold"
-                  >
-                    Adicionar Agora
-                  </button>
-                </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-6">
                   {testimonials.map((t) => (
-                    <div key={t.id} className="bg-[#0B091E]/60 border border-white/10 rounded-3xl p-6 transition-all hover:border-nortyn-secondary/30 group">
+                    <div key={t.id} className="bg-[#0B091E]/60 border border-white/10 rounded-3xl p-6 transition-all hover:border-nortyn-secondary/30">
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex items-center gap-3">
                           <img src={t.avatar_url} alt={t.client_name} className="w-12 h-12 rounded-full border border-white/10" />
@@ -391,7 +514,7 @@ export default function AdminDashboard() {
                           <button onClick={() => handleDeleteTestimonial(t.id)} className="p-2 bg-red-400/5 hover:bg-red-400/10 rounded-lg text-red-400 transition-all"><Trash2 className="w-4 h-4" /></button>
                         </div>
                       </div>
-                      <p className="text-sm text-gray-300 italic leading-relaxed line-clamp-4 font-serif">"{t.content}"</p>
+                      <p className="text-sm text-gray-300 italic leading-relaxed line-clamp-4">"{t.content}"</p>
                     </div>
                   ))}
                 </div>
@@ -399,131 +522,267 @@ export default function AdminDashboard() {
             </div>
           )}
 
-          {activeTab === 'settings' && (
-            <div className="max-w-4xl mx-auto space-y-8">
-              {/* Profile Settings */}
-              <div className="bg-[#0B091E]/60 border border-white/10 rounded-3xl p-8 backdrop-blur-md shadow-2xl transition-all">
-                <div className="flex items-center gap-3 mb-8 pb-4 border-b border-white/5">
-                  <UserIcon className="w-6 h-6 text-nortyn-secondary" />
-                  <h2 className="text-xl font-bold">Configurações de Perfil</h2>
-                </div>
-
-                <form onSubmit={handleUpdateProfile} className="flex flex-col gap-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">Nome Completo</label>
+          {activeTab === 'gallery' && (
+            <div className="space-y-8">
+              <form onSubmit={handleAddGalleryImage} className="bg-[#0B091E]/60 border border-white/10 rounded-3xl p-8 backdrop-blur-sm">
+                <div className="flex flex-col md:flex-row items-center gap-8">
+                  <div className="flex-1 space-y-4">
+                    <h3 className="text-xl font-bold flex items-center gap-2">
+                      <ImageIcon className="w-5 h-5 text-nortyn-secondary" />
+                      Upload de Imagens
+                    </h3>
+                    <p className="text-sm text-gray-400">
+                      Selecione imagens de alta qualidade para o slideshow da página inicial. Formatos aceitos: JPG, PNG, WebP. (Máx 5MB)
+                    </p>
+                  </div>
+                  
+                  <div className="w-full md:w-auto flex flex-col sm:flex-row gap-4">
+                    <div className="relative group">
                       <input 
-                        type="text" 
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        className="w-full bg-white/5 border border-white/10 text-white rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-nortyn-secondary/50 focus:border-nortyn-secondary transition-all"
+                        type="file" 
+                        id="gallery-upload"
+                        onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                        accept="image/*"
                         required
                       />
+                      <div className={`flex items-center gap-3 px-6 py-3 rounded-xl border-2 border-dashed transition-all ${selectedFile ? 'border-nortyn-secondary bg-nortyn-secondary/5 text-nortyn-secondary' : 'border-white/10 bg-white/5 text-gray-400 group-hover:border-white/20 group-hover:text-white'}`}>
+                        <Upload className="w-5 h-5" />
+                        <span className="font-medium max-w-[150px] truncate">
+                          {selectedFile ? selectedFile.name : 'Selecionar Arquivo'}
+                        </span>
+                      </div>
                     </div>
 
-                    <div>
-                      <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-3">E-mail de acesso</label>
-                      <input 
-                        type="email" 
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        className="w-full bg-white/5 border border-white/10 text-white rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-nortyn-secondary/50 focus:border-nortyn-secondary transition-all"
-                        required
-                      />
-                    </div>
-                  </div>
-
-                  <div className="pt-4 border-t border-white/5">
-                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-3 flex items-center gap-2">
-                      <Lock className="w-4 h-4 text-gray-500" />
-                      Alterar Senha <span className="text-gray-600 font-normal lowercase">(Deixe vazio para manter atual)</span>
-                    </label>
-                    <input 
-                      type="password" 
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      placeholder="******"
-                      className="w-full bg-white/5 border border-white/10 text-white rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-nortyn-secondary/50 focus:border-nortyn-secondary transition-all max-w-sm"
-                    />
-                  </div>
-
-                  <div className="flex justify-end pt-4">
                     <button 
                       type="submit" 
-                      disabled={isUpdating}
-                      className="bg-nortyn-secondary hover:bg-[#00b3ab] text-white font-bold py-3 px-8 rounded-xl transition-all shadow-lg shadow-nortyn-secondary/20 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={!selectedFile || isUploadingImage}
+                      className="bg-nortyn-secondary hover:bg-[#00b3ab] text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                     >
-                      {isUpdating ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Salvar Perfil'}
+                      {isUploadingImage ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Carregar Imagem'}
+                    </button>
+                  </div>
+                </div>
+              </form>
+
+              {isGalleryLoading ? (
+                <div className="flex items-center justify-center py-20">
+                  <Loader2 className="w-10 h-10 animate-spin text-nortyn-secondary opacity-50" />
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+                  {galleryImages.map((img) => (
+                    <div key={img.id} className="relative aspect-video rounded-2xl overflow-hidden group border border-white/10">
+                      <img src={img.url} alt={img.alt} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
+                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <button 
+                          onClick={() => handleDeleteGalleryImage(img.id)}
+                          className="p-3 bg-red-500 rounded-full text-white hover:bg-red-600 transition-all transform translate-y-4 group-hover:translate-y-0"
+                        >
+                          <Trash2 className="w-5 h-5" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'users' && (
+            <div className="space-y-8">
+              <div className="bg-[#0B091E]/60 border border-white/10 rounded-3xl p-6 backdrop-blur-sm">
+                <h3 className="text-lg font-bold mb-6 flex items-center gap-2">
+                  <Plus className="w-5 h-5 text-nortyn-secondary" />
+                  Novo Administrador
+                </h3>
+                <form onSubmit={handleCreateUser} className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <input 
+                    type="text" 
+                    value={newUser.name}
+                    onChange={(e) => setNewUser({...newUser, name: e.target.value})}
+                    placeholder="Nome"
+                    className="bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 outline-none focus:border-nortyn-secondary transition-all"
+                    required
+                  />
+                  <input 
+                    type="email" 
+                    value={newUser.email}
+                    onChange={(e) => setNewUser({...newUser, email: e.target.value})}
+                    placeholder="Email"
+                    className="bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 outline-none focus:border-nortyn-secondary transition-all"
+                    required
+                  />
+                  <input 
+                    type="password" 
+                    value={newUser.password}
+                    onChange={(e) => setNewUser({...newUser, password: e.target.value})}
+                    placeholder="Senha"
+                    className="bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 outline-none focus:border-nortyn-secondary transition-all"
+                    required
+                  />
+                  <div className="md:col-span-3 flex justify-end">
+                    <button type="submit" disabled={isCreatingUser} className="bg-nortyn-secondary hover:bg-[#00b3ab] text-white px-6 py-2.5 rounded-xl font-bold transition-all disabled:opacity-50">
+                      {isCreatingUser ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Criar Usuário'}
                     </button>
                   </div>
                 </form>
               </div>
 
-              {/* Social Media Settings */}
-              <div className="bg-[#0B091E]/60 border border-white/10 rounded-3xl p-8 backdrop-blur-md shadow-2xl transition-all">
-                <div className="flex items-center gap-3 mb-8 pb-4 border-b border-white/5">
-                  <ExternalLink className="w-6 h-6 text-nortyn-secondary" />
-                  <h2 className="text-xl font-bold">Redes Sociais do Rodapé</h2>
+              {isUsersLoading ? (
+                <div className="flex items-center justify-center py-20">
+                  <Loader2 className="w-10 h-10 animate-spin text-nortyn-secondary opacity-50" />
                 </div>
+              ) : (
+                <div className="bg-[#0B091E]/60 border border-white/10 rounded-3xl overflow-hidden">
+                  <table className="w-full text-left">
+                    <thead>
+                      <tr className="border-b border-white/5 bg-white/5 text-[10px] font-bold uppercase tracking-widest text-gray-500">
+                        <th className="px-6 py-4">Nome</th>
+                        <th className="px-6 py-4">Email</th>
+                        <th className="px-6 py-4">Criado em</th>
+                        <th className="px-6 py-4 text-right">Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/5">
+                      {adminUsers.map((u) => (
+                        <tr key={u.id} className="hover:bg-white/5 transition-colors">
+                          <td className="px-6 py-4 text-sm font-bold">{u.name}</td>
+                          <td className="px-6 py-4 text-sm text-gray-400">{u.email}</td>
+                          <td className="px-6 py-4 text-xs text-gray-500">{new Date(u.created_at).toLocaleDateString('pt-BR')}</td>
+                          <td className="px-6 py-4 text-right">
+                            <button 
+                              onClick={() => handleDeleteUser(u.id)}
+                              className="p-2 text-red-400 hover:bg-red-400/10 rounded-lg transition-all"
+                              disabled={u.id === user?.id}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
 
-                {isSocialsLoading ? (
-                  <div className="flex items-center justify-center py-20">
-                    <Loader2 className="w-10 h-10 animate-spin text-nortyn-secondary opacity-50" />
-                  </div>
-                ) : (
-                  <div className="space-y-6">
-                    {socialLinks.map((link) => (
-                      <div key={link.id} className="flex flex-col md:flex-row md:items-center gap-4 p-4 bg-white/5 rounded-2xl border border-white/5 group hover:border-nortyn-secondary/20 transition-all">
-                        <div className="flex items-center gap-4 flex-1">
-                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center uppercase font-bold text-[10px] ${link.is_active ? 'bg-nortyn-secondary text-white' : 'bg-gray-800 text-gray-500'}`}>
-                            {link.platform.substring(0, 2)}
-                          </div>
-                          <div className="flex-1">
-                            <label className="block text-[10px] font-bold text-gray-500 uppercase tracking-widest pl-1 mb-1">{link.platform}</label>
-                            <input 
-                              type="text" 
-                              value={link.url}
-                              onChange={(e) => {
-                                const newUrl = e.target.value;
-                                setSocialLinks(prev => prev.map(l => l.id === link.id ? { ...l, url: newUrl } : l));
-                              }}
-                              className="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm outline-none focus:border-nortyn-secondary transition-all"
-                              placeholder={`URL do ${link.platform}`}
-                            />
-                          </div>
+          {activeTab === 'settings' && (
+            <div className="max-w-4xl mx-auto space-y-8">
+              {isSettingsLoading ? (
+                <div className="flex items-center justify-center py-20">
+                  <Loader2 className="w-10 h-10 animate-spin text-nortyn-secondary opacity-50" />
+                </div>
+              ) : (
+                <div className="space-y-8">
+                  {/* Profile Settings */}
+                  <div className="bg-[#0B091E]/60 border border-white/10 rounded-3xl p-8 backdrop-blur-md shadow-2xl">
+                    <div className="flex items-center gap-3 mb-8 pb-4 border-b border-white/5">
+                      <UserIcon className="w-6 h-6 text-nortyn-secondary" />
+                      <h2 className="text-xl font-bold">Meu Perfil</h2>
+                    </div>
+                    <form onSubmit={handleUpdateProfile} className="space-y-6">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest pl-1">Nome Completo</label>
+                          <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-nortyn-secondary transition-all" required />
                         </div>
-                        
-                        <div className="flex items-center gap-4">
+                        <div className="space-y-2">
+                          <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest pl-1">E-mail</label>
+                          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-nortyn-secondary transition-all" required />
+                        </div>
+                      </div>
+                      <div className="space-y-2 max-w-sm">
+                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest pl-1">
+                          Nova Senha <span className="text-gray-600 font-normal lowercase">(Vazio para manter)</span>
+                        </label>
+                        <div className="relative">
+                          <input 
+                            type={showPassword ? "text" : "password"} 
+                            value={password} 
+                            onChange={(e) => setPassword(e.target.value)} 
+                            className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-nortyn-secondary transition-all pr-12 text-white" 
+                            placeholder="******" 
+                          />
                           <button 
-                            onClick={async () => {
-                              const success = await handleUpdateSocialLink(link.id, link.url, !link.is_active);
-                              if (success) {
-                                setMessage({ text: `Rede social ${!link.is_active ? 'ativada' : 'desativada'}!`, type: 'success' });
-                              }
-                            }}
-                            className={`px-4 py-2 rounded-lg text-xs font-bold transition-all ${link.is_active ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-white/5 text-gray-500 border border-white/10'}`}
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-nortyn-secondary transition-colors"
                           >
-                            {link.is_active ? 'Ativo' : 'Inativo'}
-                          </button>
-                          
-                          <button 
-                            onClick={async () => {
-                              const success = await handleUpdateSocialLink(link.id, link.url, link.is_active);
-                              if (success) {
-                                setMessage({ text: 'Link atualizado com sucesso!', type: 'success' });
-                              }
-                            }}
-                            className="bg-white/5 hover:bg-white/10 text-white p-2 rounded-lg transition-all"
-                            title="Salvar link"
-                          >
-                            <CheckCircle2 className="w-5 h-5" />
+                            {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                           </button>
                         </div>
                       </div>
-                    ))}
+                      <div className="flex justify-end pt-4">
+                        <button type="submit" disabled={isUpdating} className="bg-nortyn-secondary hover:bg-[#00b3ab] text-white font-bold py-3 px-8 rounded-xl transition-all shadow-lg">
+                          {isUpdating ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Atualizar Perfil'}
+                        </button>
+                      </div>
+                    </form>
                   </div>
-                )}
-              </div>
+
+                  {/* Integrations (Webhook) */}
+                  <div className="bg-[#0B091E]/60 border border-white/10 rounded-3xl p-8 backdrop-blur-md shadow-2xl">
+                    <div className="flex items-center gap-3 mb-8 pb-4 border-b border-white/5">
+                      <Globe className="w-6 h-6 text-nortyn-secondary" />
+                      <h2 className="text-xl font-bold">Integrações (Webhooks)</h2>
+                    </div>
+                    <form onSubmit={handleSaveAppSettings} className="space-y-6">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest pl-1">Webhook URL (Formulários)</label>
+                        <div className="flex gap-4">
+                          <input 
+                            type="text" 
+                            value={appSettings.webhook_url} 
+                            onChange={(e) => setAppSettings({...appSettings, webhook_url: e.target.value})} 
+                            className="flex-1 bg-white/5 border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-nortyn-secondary transition-all font-mono text-sm" 
+                            placeholder="https://..." 
+                          />
+                        </div>
+                      </div>
+                      <div className="flex justify-end pt-4">
+                        <button type="submit" disabled={isSavingSettings} className="bg-nortyn-secondary hover:bg-[#00b3ab] text-white font-bold py-3 px-8 rounded-xl transition-all shadow-lg">
+                          {isSavingSettings ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Salvar Configurações'}
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+
+                  {/* External Scripts */}
+                  <div className="bg-[#0B091E]/60 border border-white/10 rounded-3xl p-8 backdrop-blur-md shadow-2xl">
+                    <div className="flex items-center gap-3 mb-8 pb-4 border-b border-white/5">
+                      <Code className="w-6 h-6 text-nortyn-secondary" />
+                      <h2 className="text-xl font-bold">Códigos Externos (Analytics/Pixel)</h2>
+                    </div>
+                    <form onSubmit={handleSaveAppSettings} className="space-y-6">
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest pl-1">Scripts no Head (Analytics, Fonts, meta tags)</label>
+                        <textarea 
+                          value={appSettings.head_scripts} 
+                          onChange={(e) => setAppSettings({...appSettings, head_scripts: e.target.value})} 
+                          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-nortyn-secondary transition-all font-mono text-xs h-32" 
+                          placeholder="<script>...</script>" 
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest pl-1">Scripts no Body (Pixel, Widgets)</label>
+                        <textarea 
+                          value={appSettings.body_scripts} 
+                          onChange={(e) => setAppSettings({...appSettings, body_scripts: e.target.value})} 
+                          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 outline-none focus:border-nortyn-secondary transition-all font-mono text-xs h-32" 
+                          placeholder="<script>...</script>" 
+                        />
+                      </div>
+                      <div className="flex justify-end pt-4">
+                        <button type="submit" disabled={isSavingSettings} className="bg-nortyn-secondary hover:bg-[#00b3ab] text-white font-bold py-3 px-8 rounded-xl transition-all shadow-lg">
+                          {isSavingSettings ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Salvar Códigos'}
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -568,15 +827,32 @@ export default function AdminDashboard() {
                 </div>
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest pl-1">URL do Avatar</label>
-                <input 
-                  type="text" 
-                  value={editingTestimonial.avatar_url || ''}
-                  onChange={(e) => setEditingTestimonial({ ...editingTestimonial, avatar_url: e.target.value })}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 outline-none focus:border-nortyn-secondary transition-all"
-                  placeholder="https://..."
-                  required
-                />
+                <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest pl-1">Avatar do Cliente</label>
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden shrink-0">
+                    {editingTestimonial.avatar_url ? (
+                      <img src={editingTestimonial.avatar_url} alt="Preview" className="w-full h-full object-cover" />
+                    ) : (
+                      <UserIcon className="w-6 h-6 text-gray-600" />
+                    )}
+                  </div>
+                  <div className="relative flex-1">
+                    <input 
+                      type="file" 
+                      onChange={handleAvatarUpload}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                      accept="image/*"
+                    />
+                    <div className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border border-white/10 bg-white/5 text-xs font-medium transition-all ${isUploadingAvatar ? 'opacity-50' : 'hover:bg-white/10'}`}>
+                      {isUploadingAvatar ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Upload className="w-4 h-4 text-nortyn-secondary" />
+                      )}
+                      {editingTestimonial.avatar_url ? 'Alterar Foto' : 'Selecionar Foto'}
+                    </div>
+                  </div>
+                </div>
               </div>
               <div className="space-y-2">
                 <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest pl-1">Depoimento</label>

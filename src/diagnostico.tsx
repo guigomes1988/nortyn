@@ -17,6 +17,7 @@ export default function Diagnostico() {
   });
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [socialLinks, setSocialLinks] = useState<any[]>([]);
+  const [appSettings, setAppSettings] = useState<any>(null);
 
   const { scrollYProgress } = useScroll();
   const parallaxY = useTransform(scrollYProgress, [0, 1], ["0%", "-20%"]);
@@ -33,7 +34,53 @@ export default function Diagnostico() {
         console.error('Erro ao carregar redes sociais:', error);
       }
     };
+
+    const fetchSettings = async () => {
+      try {
+        const response = await fetch('/api/settings');
+        if (response.ok) {
+          const data = await response.json();
+          setAppSettings(data);
+          
+          // Inject Scripts
+          if (data.head_scripts) {
+            const head = document.head;
+            const div = document.createElement('div');
+            div.innerHTML = data.head_scripts;
+            Array.from(div.children).forEach(child => {
+              if (child.tagName === 'SCRIPT') {
+                const s = document.createElement('script');
+                Array.from(child.attributes).forEach(attr => s.setAttribute(attr.name, attr.value));
+                s.innerHTML = child.innerHTML;
+                head.appendChild(s);
+              } else {
+                head.appendChild(child.cloneNode(true));
+              }
+            });
+          }
+          if (data.body_scripts) {
+            const body = document.body;
+            const div = document.createElement('div');
+            div.innerHTML = data.body_scripts;
+            Array.from(div.children).forEach(child => {
+              if (child.tagName === 'SCRIPT') {
+                const s = document.createElement('script');
+                Array.from(child.attributes).forEach(attr => s.setAttribute(attr.name, attr.value));
+                s.innerHTML = child.innerHTML;
+                body.appendChild(s);
+              } else {
+                body.appendChild(child.cloneNode(true));
+              }
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao carregar configurações:', error);
+      }
+    };
+
     fetchSocialLinks();
+    fetchSettings();
   }, []);
 
   const getSocialIcon = (platform: string) => {
@@ -81,7 +128,8 @@ export default function Diagnostico() {
     setStatus('loading');
 
     try {
-      const response = await fetch('https://webhook.hvjtech.com.br/webhook/tfaa_iniciaConversa', {
+      const webhookUrl = appSettings?.webhook_url || 'https://webhook.hvjtech.com.br/webhook/tfaa_iniciaConversa';
+      const response = await fetch(webhookUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

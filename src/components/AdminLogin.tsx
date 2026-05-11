@@ -60,8 +60,7 @@ export default function AdminLogin() {
       <div className="z-10 bg-[#0B091E] border border-white/10 rounded-2xl p-8 w-full max-w-md shadow-2xl backdrop-blur-xl">
         <div className="text-center mb-8 flex flex-col items-center relative">
           <div className="absolute top-4 left-1/2 -translate-x-1/2 w-32 h-32 bg-nortyn-secondary/20 rounded-full blur-[40px] pointer-events-none -z-10"></div>
-          <img src="/nortyn-logo.png" alt="Nortyn" className="h-10 md:h-12 w-auto mb-8 relative z-10" />
-          <h2 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400 mb-2">Painel Admin</h2>
+          <img src="/nortyn-bco.png" alt="Nortyn" className="h-12 md:h-14 w-auto mb-10 relative z-10" />
           <p className="text-nortyn-muted text-sm px-4">Entre com suas credenciais para gerenciar a plataforma</p>
         </div>
 

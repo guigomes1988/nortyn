@@ -40,21 +40,27 @@ export default function Demonstracao() {
   const [phone, setPhone] = useState('');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [galleryImages, setGalleryImages] = useState<any[]>([]);
+  const [appSettings, setAppSettings] = useState<any>(null);
 
-  const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % desktopScreens.length);
-  const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + desktopScreens.length) % desktopScreens.length);
+  const screens = galleryImages.length > 0 
+    ? galleryImages.map(img => img.url)
+    : [
+        "/telas-desktop/01.jpeg",
+        "/telas-desktop/02.jpeg",
+        "/telas-desktop/03.jpeg",
+        "/telas-desktop/04.jpeg",
+        "/telas-desktop/05.jpeg",
+        "/telas-desktop/06.jpeg",
+        "/telas-desktop/07.jpeg",
+        "/telas-desktop/08.jpeg",
+        "/telas-desktop/09.jpeg",
+      ];
 
-  const desktopScreens = [
-    "/telas-desktop/01.jpeg",
-    "/telas-desktop/02.jpeg",
-    "/telas-desktop/03.jpeg",
-    "/telas-desktop/04.jpeg",
-    "/telas-desktop/05.jpeg",
-    "/telas-desktop/06.jpeg",
-    "/telas-desktop/07.jpeg",
-    "/telas-desktop/08.jpeg",
-    "/telas-desktop/09.jpeg",
-  ];
+  const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % screens.length);
+  const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + screens.length) % screens.length);
+
+
 
   useEffect(() => {
     const fetchTestimonials = async () => {
@@ -81,8 +87,66 @@ export default function Demonstracao() {
       }
     };
 
+    const fetchGallery = async () => {
+      try {
+        const response = await fetch('/api/gallery');
+        if (response.ok) {
+          const data = await response.json();
+          setGalleryImages(data);
+        }
+      } catch (error) {
+        console.error('Erro ao carregar galeria:', error);
+      }
+    };
+
+    const fetchSettings = async () => {
+      try {
+        const response = await fetch('/api/settings');
+        if (response.ok) {
+          const data = await response.json();
+          setAppSettings(data);
+          
+          // Inject Scripts
+          if (data.head_scripts) {
+            const head = document.head;
+            const div = document.createElement('div');
+            div.innerHTML = data.head_scripts;
+            Array.from(div.children).forEach(child => {
+              if (child.tagName === 'SCRIPT') {
+                const s = document.createElement('script');
+                Array.from(child.attributes).forEach(attr => s.setAttribute(attr.name, attr.value));
+                s.innerHTML = child.innerHTML;
+                head.appendChild(s);
+              } else {
+                head.appendChild(child.cloneNode(true));
+              }
+            });
+          }
+          if (data.body_scripts) {
+            const body = document.body;
+            const div = document.createElement('div');
+            div.innerHTML = data.body_scripts;
+            Array.from(div.children).forEach(child => {
+              if (child.tagName === 'SCRIPT') {
+                const s = document.createElement('script');
+                Array.from(child.attributes).forEach(attr => s.setAttribute(attr.name, attr.value));
+                s.innerHTML = child.innerHTML;
+                body.appendChild(s);
+              } else {
+                body.appendChild(child.cloneNode(true));
+              }
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Erro ao carregar configurações:', error);
+      }
+    };
+
     fetchTestimonials();
     fetchSocialLinks();
+    fetchGallery();
+    fetchSettings();
   }, []);
 
   const handlePhone = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -127,7 +191,8 @@ export default function Demonstracao() {
     };
 
     try {
-      const response = await fetch('https://webhook.hvjtech.com.br/webhook/tfaa_iniciaConversa', {
+      const webhookUrl = appSettings?.webhook_url || 'https://webhook.hvjtech.com.br/webhook/tfaa_iniciaConversa';
+      const response = await fetch(webhookUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -426,7 +491,6 @@ export default function Demonstracao() {
                   </div>
                 </div>
 
-                {/* Slides */}
                 <div className="relative w-full h-full pt-10">
                   <motion.div
                     key={currentSlide}
@@ -435,15 +499,14 @@ export default function Demonstracao() {
                     exit={{ opacity: 0, x: -20 }}
                     transition={{ duration: 0.5, ease: "easeOut" }}
                     className="w-full h-full relative cursor-zoom-in"
-                    onClick={() => setSelectedImage(desktopScreens[currentSlide])}
+                    onClick={() => setSelectedImage(screens[currentSlide])}
                   >
                     <img
-                      src={desktopScreens[currentSlide]}
+                      src={screens[currentSlide]}
                       alt={`Interface Nortyn ${currentSlide + 1}`}
                       className="w-full h-full object-cover"
                     />
                     
-                    {/* Hover Overlay */}
                     <div className="absolute inset-0 bg-[#1d1d30]/5 opacity-0 group-hover/slide:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                       <div className="w-16 h-16 rounded-full bg-white/90 backdrop-blur-md shadow-2xl flex items-center justify-center text-[#00a99d]">
                         <Search className="w-6 h-6" />
@@ -452,7 +515,6 @@ export default function Demonstracao() {
                   </motion.div>
                 </div>
 
-                {/* Navigation Arrows */}
                 <button
                   onClick={(e) => { e.stopPropagation(); prevSlide(); }}
                   className="absolute left-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/90 shadow-xl border border-gray-100 flex items-center justify-center text-[#1d1d30] hover:bg-[#00a99d] hover:text-white transition-all duration-300 opacity-0 group-hover:opacity-100 z-30"
@@ -467,9 +529,8 @@ export default function Demonstracao() {
                 </button>
               </div>
 
-              {/* Dots / Indicators */}
               <div className="flex justify-center gap-3 mt-10">
-                {desktopScreens.map((_, index) => (
+                {screens.map((_, index) => (
                   <button
                     key={index}
                     onClick={() => setCurrentSlide(index)}

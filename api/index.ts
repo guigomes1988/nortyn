@@ -4,10 +4,46 @@ import dotenv from 'dotenv';
 import { neon } from '@neondatabase/serverless';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 dotenv.config();
 
 const app = express();
+
+// Ensure uploads directory exists
+const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true });
+}
+
+// Multer configuration
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, uploadsDir);
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, uniqueSuffix + path.extname(file.originalname));
+  }
+});
+
+const upload = multer({ 
+  storage,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = /jpeg|jpg|png|webp/;
+    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+    const mimetype = allowedTypes.test(file.mimetype);
+    if (extname && mimetype) return cb(null, true);
+    cb(new Error('Only images (jpg, png, webp) are allowed'));
+  }
+});
 const port = process.env.PORT || 3001;
 const JWT_SECRET = process.env.JWT_SECRET || 'nortyn_super_secret_jwt_key';
 
@@ -128,6 +164,62 @@ async function initDB() {
         ('tiktok', 'https://tiktok.com', false)
       `;
       console.log('Default social links seeded.');
+    }
+
+    // Gallery table
+    await sql`
+      CREATE TABLE IF NOT EXISTS gallery_images (
+        id SERIAL PRIMARY KEY,
+        url TEXT NOT NULL,
+        alt TEXT,
+        display_order INTEGER DEFAULT 0,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      )
+    `;
+
+    // Seed default gallery images if empty
+    const existingGallery = await sql`SELECT id FROM gallery_images LIMIT 1`;
+    if (existingGallery.length === 0) {
+      const defaultImages = [
+        ['/telas-desktop/01.jpeg', 'Interface Desktop 1'],
+        ['/telas-desktop/02.jpeg', 'Interface Desktop 2'],
+        ['/telas-desktop/03.jpeg', 'Interface Desktop 3'],
+        ['/telas-desktop/04.jpeg', 'Interface Desktop 4'],
+        ['/telas-desktop/05.jpeg', 'Interface Desktop 5'],
+        ['/telas-desktop/06.jpeg', 'Interface Desktop 6'],
+        ['/telas-desktop/07.jpeg', 'Interface Desktop 7'],
+        ['/telas-desktop/08.jpeg', 'Interface Desktop 8'],
+        ['/telas-desktop/09.jpeg', 'Interface Desktop 9']
+      ];
+      
+      for (const [url, alt] of defaultImages) {
+        await sql`
+          INSERT INTO gallery_images (url, alt, display_order)
+          VALUES (${url}, ${alt}, 0)
+        `;
+      }
+      console.log('Default gallery images seeded.');
+    }
+
+    // App Settings table
+    await sql`
+      CREATE TABLE IF NOT EXISTS app_settings (
+        key TEXT PRIMARY KEY,
+        value TEXT NOT NULL,
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      )
+    `;
+
+    // Seed default settings if empty
+    const existingSettings = await sql`SELECT key FROM app_settings LIMIT 1`;
+    if (existingSettings.length === 0) {
+      await sql`
+        INSERT INTO app_settings (key, value) VALUES 
+        ('webhook_url', 'https://webhook.hvjtech.com.br/webhook/tfaa_iniciaConversa'),
+        ('head_scripts', ''),
+        ('body_scripts', '')
+      `;
+      console.log('Default settings seeded.');
     }
 
     console.log('Database initialized successfully');
@@ -277,6 +369,14 @@ app.delete('/api/testimonials/:id', authenticateToken, async (req, res) => {
   }
 });
 
+app.post('/api/testimonials/upload', authenticateToken, upload.single('image'), async (req: any, res: any) => {
+  if (!req.file) {
+    return res.status(400).json({ error: 'No image file uploaded' });
+  }
+  const imageUrl = `/uploads/${req.file.filename}`;
+  res.json({ url: imageUrl });
+});
+
 // --- LEADS ENDPOINT ---
 app.post('/api/leads', async (req, res) => {
   const { name, email, phone, company, role, revenue, sector } = req.body;
@@ -371,6 +471,133 @@ app.put('/api/social-links/:id', authenticateToken, async (req, res) => {
   } catch (error) {
     console.error('Error updating social link:', error);
     res.status(500).json({ error: 'Failed to update social link' });
+  }
+});
+
+// --- GALLERY ENDPOINTS ---
+app.get('/api/gallery', async (req, res) => {
+  try {
+    const images = await sql`SELECT * FROM gallery_images ORDER BY display_order ASC, id DESC`;
+    res.json(images);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch gallery images' });
+  }
+});
+
+app.post('/api/gallery', authenticateToken, async (req, res) => {
+  const { url, alt, display_order } = req.body;
+  try {
+    const result = await sql`
+      INSERT INTO gallery_images (url, alt, display_order)
+      VALUES (${url}, ${alt || ''}, ${display_order || 0})
+      RETURNING *
+    `;
+    res.status(201).json(result[0]);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to add image' });
+  }
+});
+
+app.post('/api/gallery/upload', authenticateToken, upload.single('image'), async (req: any, res: any) => {
+  if (!req.file) {
+    return res.status(400).json({ error: 'No image file uploaded' });
+  }
+
+  const imageUrl = `/uploads/${req.file.filename}`;
+  const alt = req.body.alt || '';
+
+  try {
+    const result = await sql`
+      INSERT INTO gallery_images (url, alt, display_order)
+      VALUES (${imageUrl}, ${alt}, 0)
+      RETURNING *
+    `;
+    res.status(201).json(result[0]);
+  } catch (error) {
+    console.error('Database error after upload:', error);
+    res.status(500).json({ error: 'Failed to save image reference' });
+  }
+});
+
+app.delete('/api/gallery/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  try {
+    await sql`DELETE FROM gallery_images WHERE id = ${id}`;
+    res.json({ message: 'Image deleted' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete image' });
+  }
+});
+
+// --- SETTINGS ENDPOINTS ---
+app.get('/api/settings', async (req, res) => {
+  try {
+    const rows = await sql`SELECT key, value FROM app_settings`;
+    const settings = rows.reduce((acc, row) => {
+      acc[row.key] = row.value;
+      return acc;
+    }, {} as Record<string, string>);
+    res.json(settings);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch settings' });
+  }
+});
+
+app.post('/api/settings', authenticateToken, async (req, res) => {
+  const { settings } = req.body;
+  try {
+    for (const [key, value] of Object.entries(settings)) {
+      await sql`
+        INSERT INTO app_settings (key, value, updated_at)
+        VALUES (${key}, ${value as string}, CURRENT_TIMESTAMP)
+        ON CONFLICT (key) DO UPDATE SET
+          value = EXCLUDED.value,
+          updated_at = EXCLUDED.updated_at
+      `;
+    }
+    res.json({ message: 'Settings updated' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to update settings' });
+  }
+});
+
+// --- USER MANAGEMENT ENDPOINTS ---
+app.get('/api/users', authenticateToken, async (req, res) => {
+  try {
+    const users = await sql`SELECT id, name, email, created_at FROM users ORDER BY id ASC`;
+    res.json(users);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch users' });
+  }
+});
+
+app.post('/api/users', authenticateToken, async (req, res) => {
+  const { name, email, password } = req.body;
+  try {
+    const salt = await bcrypt.genSalt(10);
+    const hash = await bcrypt.hash(password, salt);
+    const result = await sql`
+      INSERT INTO users (name, email, password_hash)
+      VALUES (${name}, ${email}, ${hash})
+      RETURNING id, name, email, created_at
+    `;
+    res.status(201).json(result[0]);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to create user' });
+  }
+});
+
+app.delete('/api/users/:id', authenticateToken, async (req: any, res: any) => {
+  const { id } = req.params;
+  // Prevent deleting self
+  if (parseInt(id) === req.user.id) {
+    return res.status(400).json({ error: 'You cannot delete yourself' });
+  }
+  try {
+    await sql`DELETE FROM users WHERE id = ${id}`;
+    res.json({ message: 'User deleted' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete user' });
   }
 });
 
