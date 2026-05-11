@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowRight, Menu, Image as ImageIcon, MoreVertical, ArrowUpRight, FileSpreadsheet, EyeOff, Target, Brain, TrendingDown, Users, ChevronDown, Check, Info, Aperture, Circle, Square, Triangle, Hexagon, Octagon, Box, Linkedin, Instagram, Facebook, Youtube, Music, Mail, Phone, MapPin, ArrowUp } from 'lucide-react';
+import { ArrowRight, Menu, Image as ImageIcon, MoreVertical, ArrowUpRight, FileSpreadsheet, EyeOff, Target, Brain, TrendingDown, Users, ChevronDown, Check, Info, Aperture, Circle, Square, Triangle, Hexagon, Octagon, Box, Linkedin, Instagram, Facebook, Youtube, Music, Mail, Phone, MapPin, ArrowUp, Activity, Zap } from 'lucide-react';
+import { motion, useScroll, useTransform } from 'motion/react';
 import BrandGlow from './components/BrandGlow';
 import BrandNetwork from './components/BrandNetwork';
 import EditableElement from './components/EditableElement';
@@ -16,6 +17,9 @@ export default function Diagnostico() {
   });
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const [socialLinks, setSocialLinks] = useState<any[]>([]);
+
+  const { scrollYProgress } = useScroll();
+  const parallaxY = useTransform(scrollYProgress, [0, 1], ["0%", "-20%"]);
 
   useEffect(() => {
     const fetchSocialLinks = async () => {
@@ -237,13 +241,24 @@ export default function Diagnostico() {
                     as="h3"
                     className="text-3xl font-bold text-slate-900 mb-6 leading-snug"
                   />
-                  {/* Visual Placeholder */}
-                  <div className="bg-white rounded-2xl p-6 mt-6 flex flex-col items-center justify-center border border-gray-200 min-h-[160px] shadow-sm">
-                    <div className="w-12 h-12 mb-4 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 border border-gray-100">
-                      <ImageIcon className="w-6 h-6" />
+                  {/* Visual: Animated Target */}
+                  <div className="bg-white rounded-2xl p-6 mt-6 flex flex-col items-center justify-center border border-gray-200 min-h-[160px] shadow-sm overflow-hidden">
+                    <div className="relative">
+                      <motion.div
+                        animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
+                        transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                        className="absolute inset-0 rounded-full bg-nortyn-primary/20 scale-150"
+                      />
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                        className="relative z-10 w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center text-nortyn-primary border border-gray-100"
+                      >
+                        <Target className="w-8 h-8" />
+                      </motion.div>
                     </div>
-                    <span className="text-gray-500 font-bold text-xs uppercase tracking-widest text-center">
-                      [Imagem de Metas]
+                    <span className="text-gray-400 font-bold text-[10px] uppercase tracking-[0.2em] mt-6">
+                      Foco em Resultados
                     </span>
                   </div>
                 </div>
@@ -266,16 +281,27 @@ export default function Diagnostico() {
                     as="h3"
                     className="text-3xl font-bold text-white mb-6 leading-snug"
                   />
-                  {/* Visual Placeholder */}
+                  {/* Visual: Animated Chart */}
                   <div className="bg-white/95 backdrop-blur-md rounded-2xl p-6 mt-6 flex flex-col items-center justify-center border border-white/20 min-h-[160px] shadow-inner">
-                    <div className="flex items-end gap-2 w-full h-16 justify-center opacity-80 mb-4">
-                      <div className="w-4 bg-nortyn-secondary/40 rounded-t-sm h-8"></div>
-                      <div className="w-4 bg-nortyn-secondary/60 rounded-t-sm h-12"></div>
-                      <div className="w-4 bg-nortyn-secondary rounded-t-sm h-16"></div>
-                      <div className="w-4 bg-nortyn-secondary/80 rounded-t-sm h-10"></div>
+                    <div className="flex items-end gap-2.5 h-16 mb-4">
+                      {[0.4, 0.7, 1, 0.8, 0.6].map((h, i) => (
+                        <motion.div
+                          key={i}
+                          initial={{ height: 0 }}
+                          whileInView={{ height: `${h * 100}%` }}
+                          animate={{ 
+                            height: [`${h * 100}%`, `${(h * 0.85) * 100}%`, `${h * 100}%`],
+                          }}
+                          transition={{ 
+                            height: { duration: 2.5, repeat: Infinity, ease: "easeInOut", delay: i * 0.2 },
+                            initial: { duration: 0.8, delay: i * 0.1 }
+                          }}
+                          className="w-4 bg-nortyn-secondary rounded-t-sm"
+                        />
+                      ))}
                     </div>
-                    <span className="text-nortyn-secondary font-bold text-xs uppercase tracking-widest text-center">
-                      [Gráfico de Previsibilidade]
+                    <span className="text-nortyn-secondary font-bold text-[10px] uppercase tracking-[0.2em]">
+                      Dados em Tempo Real
                     </span>
                   </div>
                 </div>
@@ -298,13 +324,28 @@ export default function Diagnostico() {
                     as="h3"
                     className="text-3xl font-bold text-slate-900 mb-6 leading-snug"
                   />
-                  {/* Visual Placeholder */}
+                  {/* Visual: Animated Execution */}
                   <div className="bg-white rounded-2xl p-6 mt-6 flex flex-col items-center justify-center border border-gray-200 min-h-[160px] shadow-sm">
-                    <div className="w-12 h-12 mb-4 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 border border-gray-100">
-                      <ImageIcon className="w-6 h-6" />
+                    <div className="relative">
+                      <motion.div
+                        animate={{ 
+                          rotate: [0, 10, 0, -10, 0],
+                        }}
+                        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                        className="w-16 h-16 rounded-2xl bg-gray-50 flex items-center justify-center text-[#009a93] border border-gray-100 shadow-inner"
+                      >
+                        <Zap className="w-8 h-8 fill-current opacity-20 absolute" />
+                        <motion.div
+                          initial={{ pathLength: 0 }}
+                          whileInView={{ pathLength: 1 }}
+                          transition={{ duration: 1, delay: 0.5 }}
+                        >
+                          <Check className="w-8 h-8 relative z-10" strokeWidth={3} />
+                        </motion.div>
+                      </motion.div>
                     </div>
-                    <span className="text-gray-500 font-bold text-xs uppercase tracking-widest text-center">
-                      [Imagem de Execução]
+                    <span className="text-gray-400 font-bold text-[10px] uppercase tracking-[0.2em] mt-6">
+                      Execução de Alta Performance
                     </span>
                   </div>
                 </div>
@@ -349,72 +390,72 @@ export default function Diagnostico() {
 
                   {/* COLUNA DIREITA */}
                   <div className="lg:col-span-7 flex flex-col gap-4">
-
                     {/* Card 1 */}
-                    <div className="bg-white rounded-2xl shadow-sm p-5 flex items-start gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-gray-50 flex-shrink-0 flex items-center justify-center text-[#009a93]">
-                        <FileSpreadsheet className="w-6 h-6" />
+                    <div className="bg-white rounded-2xl shadow-sm p-6 flex flex-col items-center text-center md:flex-row md:items-start md:text-left gap-4 md:gap-6 transition-all duration-300 hover:shadow-md">
+                      <div className="w-14 h-14 rounded-2xl bg-gray-50 flex-shrink-0 flex items-center justify-center text-[#009a93] shadow-inner">
+                        <FileSpreadsheet className="w-7 h-7" />
                       </div>
-                      <div className="flex flex-col">
-                        <EditableElement contentKey="pain.card1.title" defaultContent="Horas excessivas com planilhas" as="h3" className="text-slate-900 font-semibold" />
-                        <EditableElement contentKey="pain.card1.desc" defaultContent="Consolidação manual, retrabalho e risco constante de erro." as="p" className="text-gray-500 text-sm mt-1" />
+                      <div className="flex flex-col items-center md:items-start">
+                        <EditableElement contentKey="pain.card1.title" defaultContent="Horas excessivas com planilhas" as="h3" className="text-slate-900 font-bold text-lg" />
+                        <EditableElement contentKey="pain.card1.desc" defaultContent="Consolidação manual, retrabalho e risco constante de erro." as="p" className="text-gray-500 text-sm mt-1 leading-relaxed" />
                       </div>
                     </div>
 
                     {/* Card 2 */}
-                    <div className="bg-white rounded-2xl shadow-sm p-5 flex items-start gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-gray-50 flex-shrink-0 flex items-center justify-center text-[#009a93]">
-                        <EyeOff className="w-6 h-6" />
+                    <div className="bg-white rounded-2xl shadow-sm p-6 flex flex-col items-center text-center md:flex-row md:items-start md:text-left gap-4 md:gap-6 transition-all duration-300 hover:shadow-md">
+                      <div className="w-14 h-14 rounded-2xl bg-gray-50 flex-shrink-0 flex items-center justify-center text-[#009a93] shadow-inner">
+                        <EyeOff className="w-7 h-7" />
                       </div>
-                      <div className="flex flex-col">
-                        <EditableElement contentKey="pain.card2.title" defaultContent="Falta de visão das vendas" as="h3" className="text-slate-900 font-semibold" />
-                        <EditableElement contentKey="pain.card2.desc" defaultContent="Você descobre o resultado tarde demais para agir." as="p" className="text-gray-500 text-sm mt-1" />
+                      <div className="flex flex-col items-center md:items-start">
+                        <EditableElement contentKey="pain.card2.title" defaultContent="Falta de visão das vendas" as="h3" className="text-slate-900 font-bold text-lg" />
+                        <EditableElement contentKey="pain.card2.desc" defaultContent="Você descobre o resultado tarde demais para agir." as="p" className="text-gray-500 text-sm mt-1 leading-relaxed" />
                       </div>
                     </div>
 
                     {/* Card 3 */}
-                    <div className="bg-white rounded-2xl shadow-sm p-5 flex items-start gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-gray-50 flex-shrink-0 flex items-center justify-center text-[#009a93]">
-                        <Target className="w-6 h-6" />
+                    <div className="bg-white rounded-2xl shadow-sm p-6 flex flex-col items-center text-center md:flex-row md:items-start md:text-left gap-4 md:gap-6 transition-all duration-300 hover:shadow-md">
+                      <div className="w-14 h-14 rounded-2xl bg-gray-50 flex-shrink-0 flex items-center justify-center text-[#009a93] shadow-inner">
+                        <Target className="w-7 h-7" />
                       </div>
-                      <div className="flex flex-col">
-                        <EditableElement contentKey="pain.card3.title" defaultContent="Metas mal distribuídas" as="h3" className="text-slate-900 font-semibold" />
-                        <EditableElement contentKey="pain.card3.desc" defaultContent="Dificuldade para equilibrar metas por região ou representante." as="p" className="text-gray-500 text-sm mt-1" />
+                      <div className="flex flex-col items-center md:items-start">
+                        <EditableElement contentKey="pain.card3.title" defaultContent="Metas mal distribuídas" as="h3" className="text-slate-900 font-bold text-lg" />
+                        <EditableElement contentKey="pain.card3.desc" defaultContent="Dificuldade para equilibrar metas por região ou representante." as="p" className="text-gray-500 text-sm mt-1 leading-relaxed" />
                       </div>
                     </div>
 
                     {/* Card 4 */}
-                    <div className="bg-white rounded-2xl shadow-sm p-5 flex items-start gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-gray-50 flex-shrink-0 flex items-center justify-center text-[#009a93]">
-                        <Brain className="w-6 h-6" />
+                    <div className="bg-white rounded-2xl shadow-sm p-6 flex flex-col items-center text-center md:flex-row md:items-start md:text-left gap-4 md:gap-6 transition-all duration-300 hover:shadow-md">
+                      <div className="w-14 h-14 rounded-2xl bg-gray-50 flex-shrink-0 flex items-center justify-center text-[#009a93] shadow-inner">
+                        <Brain className="w-7 h-7" />
                       </div>
-                      <div className="flex flex-col">
-                        <EditableElement contentKey="pain.card4.title" defaultContent="Decisão baseada em feeling" as="h3" className="text-slate-900 font-semibold" />
-                        <EditableElement contentKey="pain.card4.desc" defaultContent="Poucos indicadores claros para diretoria e gerência." as="p" className="text-gray-500 text-sm mt-1" />
+                      <div className="flex flex-col items-center md:items-start">
+                        <EditableElement contentKey="pain.card4.title" defaultContent="Decisão baseada em feeling" as="h3" className="text-slate-900 font-bold text-lg" />
+                        <EditableElement contentKey="pain.card4.desc" defaultContent="Poucos indicadores claros para diretoria e gerência." as="p" className="text-gray-500 text-sm mt-1 leading-relaxed" />
                       </div>
                     </div>
 
                     {/* Card 5 */}
-                    <div className="bg-white rounded-2xl shadow-sm p-5 flex items-start gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-gray-50 flex-shrink-0 flex items-center justify-center text-[#009a93]">
-                        <TrendingDown className="w-6 h-6" />
+                    <div className="bg-white rounded-2xl shadow-sm p-6 flex flex-col items-center text-center md:flex-row md:items-start md:text-left gap-4 md:gap-6 transition-all duration-300 hover:shadow-md">
+                      <div className="w-14 h-14 rounded-2xl bg-gray-50 flex-shrink-0 flex items-center justify-center text-[#009a93] shadow-inner">
+                        <TrendingDown className="w-7 h-7" />
                       </div>
-                      <div className="flex flex-col">
-                        <EditableElement contentKey="pain.card5.title" defaultContent="Baixa previsibilidade" as="h3" className="text-slate-900 font-semibold" />
-                        <EditableElement contentKey="pain.card5.desc" defaultContent="Projeções frágeis e pouca segurança para planejar." as="p" className="text-gray-500 text-sm mt-1" />
+                      <div className="flex flex-col items-center md:items-start">
+                        <EditableElement contentKey="pain.card5.title" defaultContent="Baixa previsibilidade" as="h3" className="text-slate-900 font-bold text-lg" />
+                        <EditableElement contentKey="pain.card5.desc" defaultContent="Projeções frágeis e pouca segurança para planejar." as="p" className="text-gray-500 text-sm mt-1 leading-relaxed" />
                       </div>
                     </div>
 
                     {/* Card 6 */}
-                    <div className="bg-white rounded-2xl shadow-sm p-5 flex items-start gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-gray-50 flex-shrink-0 flex items-center justify-center text-[#009a93]">
-                        <Users className="w-6 h-6" />
+                    <div className="bg-white rounded-2xl shadow-sm p-6 flex flex-col items-center text-center md:flex-row md:items-start md:text-left gap-4 md:gap-6 transition-all duration-300 hover:shadow-md">
+                      <div className="w-14 h-14 rounded-2xl bg-gray-50 flex-shrink-0 flex items-center justify-center text-[#009a93] shadow-inner">
+                        <Users className="w-7 h-7" />
                       </div>
-                      <div className="flex flex-col">
-                        <EditableElement contentKey="pain.card6.title" defaultContent="Equipe sem direcionamento claro" as="h3" className="text-slate-900 font-semibold" />
-                        <EditableElement contentKey="pain.card6.desc" defaultContent="Falta de acompanhamento prático e comunicação objetiva." as="p" className="text-gray-500 text-sm mt-1" />
+                      <div className="flex flex-col items-center md:items-start">
+                        <EditableElement contentKey="pain.card6.title" defaultContent="Equipe sem direcionamento claro" as="h3" className="text-slate-900 font-bold text-lg" />
+                        <EditableElement contentKey="pain.card6.desc" defaultContent="Falta de acompanhamento prático e comunicação objetiva." as="p" className="text-gray-500 text-sm mt-1 leading-relaxed" />
                       </div>
                     </div>
+                  </div>
 
                   </div>
                 </div>
@@ -472,8 +513,9 @@ export default function Diagnostico() {
             </div>
 
             {/* SECTION 06: ABOUT NORTYN (Moved up) */}
-            <div id="nortyn" className="mt-32 md:mt-40 w-full max-w-[1300px] mx-auto">
-              <div className="grid lg:grid-cols-2 gap-16 lg:gap-24 items-center">
+            <div id="nortyn" className="mt-32 md:mt-40 w-full max-w-[1300px] mx-auto relative z-10">
+              <div className="bg-white border border-gray-100 rounded-[40px] p-8 lg:p-16 shadow-xl shadow-gray-200/50">
+                <div className="grid lg:grid-cols-2 gap-16 lg:gap-24 items-center">
 
                 {/* Left Column: Text Content */}
                 <div className="flex flex-col items-start">
@@ -515,10 +557,14 @@ export default function Diagnostico() {
 
                   {/* Coluna 1 do Bento */}
                   <div className="flex flex-col gap-4 md:gap-6">
-                    {/* Image 1 */}
-                    <div className="rounded-[32px] overflow-hidden relative aspect-[4/5] bg-gray-50 border border-gray-100 group">
-                      <img src="https://picsum.photos/seed/founder/400/500?grayscale" alt="Águirra Tech" className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-500 mix-blend-luminosity" referrerPolicy="no-referrer" />
-                      <div className="absolute bottom-4 left-4 right-4">
+                    {/* Image 1: Static Team Image */}
+                    <div className="rounded-[32px] overflow-hidden relative aspect-[4/5] bg-slate-900 border border-white/10 group">
+                      <img 
+                        src="/img-equipe.png" 
+                        alt="Nossa Equipe" 
+                        className="absolute inset-0 w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity duration-500 scale-105 group-hover:scale-110 transition-transform duration-700" 
+                      />
+                      <div className="absolute bottom-4 left-4 right-4 z-10">
                         <div className="bg-white/90 backdrop-blur-md border border-gray-200 rounded-2xl p-4 flex items-center justify-between shadow-sm">
                           <div>
                             <EditableElement contentKey="about.founder.name" defaultContent="Águirra Tech" as="p" className="text-slate-900 font-medium text-sm" />
@@ -554,21 +600,32 @@ export default function Diagnostico() {
                       />
                     </div>
 
-                    {/* Image 2 */}
-                    <div className="rounded-[32px] overflow-hidden relative aspect-square bg-gray-50 border border-gray-100 group">
-                      <img src="https://picsum.photos/seed/industry-team/400/400?grayscale" alt="Equipe" className="w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity duration-500 mix-blend-luminosity" referrerPolicy="no-referrer" />
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="w-16 h-16 rounded-full bg-white/90 backdrop-blur-md border border-gray-200 flex items-center justify-center shadow-sm">
-                          <Target className="w-8 h-8 text-[#009a93]" />
+                    {/* Card 2: Brand Color + Animated Icon */}
+                    <div className="rounded-[32px] overflow-hidden relative aspect-square bg-[#009a93] border border-white/10 flex items-center justify-center group">
+                      <motion.div
+                        animate={{ 
+                          scale: [1, 1.1, 1],
+                        }}
+                        transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                        className="relative z-10 flex flex-col items-center gap-4"
+                      >
+                        <div className="w-20 h-20 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30 shadow-xl">
+                          <Users className="w-10 h-10 text-white" />
                         </div>
-                      </div>
+                        <span className="text-white/80 font-bold text-[10px] uppercase tracking-[0.2em]">
+                          Time de Especialistas
+                        </span>
+                      </motion.div>
+                      
+                      {/* Decorative Circles */}
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16 blur-2xl" />
+                      <div className="absolute bottom-0 left-0 w-24 h-24 bg-black/5 rounded-full -ml-12 -mb-12 blur-xl" />
                     </div>
                   </div>
 
                 </div>
               </div>
             </div>
-
           </div>
         </section>
 
@@ -778,14 +835,13 @@ export default function Diagnostico() {
         {/* FOOTER */}
         <footer className="container mx-auto px-4 md:px-6 pb-12 relative z-10">
           <div className="bg-[#0B091E] rounded-[40px] p-12 md:p-16 border border-white/10 shadow-2xl">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 lg:gap-8">
-
+            <div className="flex flex-col items-center text-center">
               {/* Column 1: Brand & Social */}
-              <div className="flex flex-col gap-6">
+              <div className="flex flex-col items-center gap-6 max-w-sm">
                 <div className="flex items-center gap-3">
-                  <img src="/nortyn-logo.png" alt="Nortyn" className="h-10 md:h-12 w-auto" />
+                  <img src="/nortyn-bco.png" alt="Nortyn" className="h-10 md:h-12 w-auto" />
                 </div>
-                <p className="text-white/60 text-sm leading-relaxed max-w-[240px]">
+                <p className="text-white/60 text-sm leading-relaxed">
                   Inteligência de mercado para escalar decisões comerciais com precisão e estratégia.
                 </p>
                 <div className="flex items-center gap-4">
@@ -802,48 +858,6 @@ export default function Diagnostico() {
                   ))}
                 </div>
               </div>
-
-              {/* Column 2: Soluções */}
-              <div className="flex flex-col gap-6">
-                <h4 className="text-white font-semibold text-lg">Soluções</h4>
-                <nav className="flex flex-col gap-3">
-                  <a href="#sintomas" className="text-white/60 text-sm hover:text-white transition-colors">Sintomas</a>
-                  <a href="#diagnostico" className="text-white/60 text-sm hover:text-white transition-colors">Diagnóstico</a>
-                  <a href="#nortyn" className="text-white/60 text-sm hover:text-white transition-colors">Quem é a Nortyn</a>
-                </nav>
-              </div>
-
-              {/* Column 3: Legal */}
-              <div className="flex flex-col gap-6">
-                <h4 className="text-white font-semibold text-lg">Institucional</h4>
-                <nav className="flex flex-col gap-3">
-                  <a href="#" className="text-white/60 text-sm hover:text-white transition-colors">Política de Privacidade</a>
-                  <a href="#" className="text-white/60 text-sm hover:text-white transition-colors">Termos de Uso</a>
-                  <button onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })} className="text-nortyn-secondary text-sm font-medium flex items-center gap-2 hover:gap-3 transition-all">
-                    Voltar ao topo <ArrowUp className="w-4 h-4" />
-                  </button>
-                </nav>
-              </div>
-
-              {/* Column 4: Contato */}
-              <div className="flex flex-col gap-6">
-                <h4 className="text-white font-semibold text-lg">Contato</h4>
-                <ul className="flex flex-col gap-4">
-                  <li className="flex items-start gap-3">
-                    <MapPin className="w-5 h-5 text-nortyn-secondary shrink-0 mt-0.5" />
-                    <span className="text-white/60 text-sm">Rua Conceição 233, Campinas - SP</span>
-                  </li>
-                  <li className="flex items-center gap-3">
-                    <Mail className="w-5 h-5 text-nortyn-secondary shrink-0" />
-                    <a href="mailto:contato@nortyn.com.br" className="text-white/60 text-sm hover:text-white transition-colors">contato@nortyn.com.br</a>
-                  </li>
-                  <li className="flex items-center gap-3">
-                    <Phone className="w-5 h-5 text-nortyn-secondary shrink-0" />
-                    <span className="text-white/60 text-sm">(19) 99999-9999</span>
-                  </li>
-                </ul>
-              </div>
-
             </div>
 
             <div className="mt-16 pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-4">

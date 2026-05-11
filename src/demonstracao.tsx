@@ -1031,46 +1031,23 @@ export default function Demonstracao() {
 
       {/* Footer */}
       <footer className="w-full bg-[#312783] text-white">
-        <div className="max-w-7xl mx-auto px-4 py-16 grid grid-cols-1 md:grid-cols-4 gap-12 md:gap-8">
-          {/* Column 1 (Marca e Redes Sociais) */}
-          <div className="md:col-span-2">
-            <img src="/nortyn-bco.png" alt={siteConfig.name} className="h-[55px] w-auto mb-6 block" />
-            <p className="text-white/80 text-lg mb-8 max-w-sm">
-              {siteConfig.footer.tagline}
-            </p>
-            <div className="flex items-center gap-5">
-              {socialLinks.filter(link => link.is_active).map(link => (
-                <a
-                  key={link.id}
-                  href={link.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-white hover:text-[#009a93] transition-colors"
-                >
-                  {getSocialIcon(link.platform)}
-                </a>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <h3 className="text-lg font-semibold text-white mb-6">Menu</h3>
-            <ul className="flex flex-col gap-4">
-              {siteConfig.navigation.map((item) => (
-                <li key={item.href}><a href={item.href} className="text-white/70 hover:text-white transition-colors text-sm">{item.label}</a></li>
-              ))}
-              <li><a href="#demonstracao" className="text-white/70 hover:text-white transition-colors text-sm">Agendar Demonstração</a></li>
-            </ul>
-          </div>
-
-          {/* Column 3 (Contato e Legal) */}
-          <div>
-            <h3 className="text-lg font-semibold text-white mb-6">Contato</h3>
-            <ul className="flex flex-col gap-4">
-              <li><a href={`mailto:${siteConfig.contact.email}`} className="text-white/70 hover:text-white transition-colors text-sm">{siteConfig.contact.email}</a></li>
-              <li><a href="#" className="text-white/70 hover:text-white transition-colors text-sm">Termos de Uso</a></li>
-              <li><a href="#" className="text-white/70 hover:text-white transition-colors text-sm">Política de Privacidade</a></li>
-            </ul>
+        <div className="max-w-7xl mx-auto px-4 py-16 flex flex-col items-center text-center">
+          <img src="/nortyn-bco.png" alt={siteConfig.name} className="h-[55px] w-auto mb-6" />
+          <p className="text-white/80 text-lg mb-8 max-w-sm">
+            {siteConfig.footer.tagline}
+          </p>
+          <div className="flex items-center gap-5">
+            {socialLinks.filter(link => link.is_active).map(link => (
+              <a
+                key={link.id}
+                href={link.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-white hover:text-[#009a93] transition-colors"
+              >
+                {getSocialIcon(link.platform)}
+              </a>
+            ))}
           </div>
         </div>
 
