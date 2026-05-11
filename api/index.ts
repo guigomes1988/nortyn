@@ -45,7 +45,11 @@ const upload = multer({
   }
 });
 const port = process.env.PORT || 3001;
-const JWT_SECRET = process.env.JWT_SECRET || 'nortyn_super_secret_jwt_key';
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  console.error('CRITICAL: JWT_SECRET must be defined in .env');
+  process.exit(1);
+}
 
 app.use(cors());
 app.use(express.json());

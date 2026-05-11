@@ -411,7 +411,7 @@ export default function Demonstracao() {
             <motion.div
               variants={staggerItem}
               whileHover={{ y: -5, scale: 1.02 }}
-              className="flex flex-col items-start text-left bg-white p-8 rounded-[2rem] border border-gray-100 shadow-[0_8px_30px_rgba(0,0,0,0.04)] transition-all duration-300 hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] hover:border-[#00a99d]/30"
+              className="flex flex-col items-center text-center md:items-start md:text-left bg-white p-8 rounded-[2rem] border border-gray-100 shadow-[0_8px_30px_rgba(0,0,0,0.04)] transition-all duration-300 hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] hover:border-[#00a99d]/30"
             >
               <motion.div
                 animate={{ y: [0, -4, 0] }}
@@ -430,7 +430,7 @@ export default function Demonstracao() {
             <motion.div
               variants={staggerItem}
               whileHover={{ y: -5, scale: 1.02 }}
-              className="flex flex-col items-start text-left bg-white p-8 rounded-[2rem] border border-gray-100 shadow-[0_8px_30px_rgba(0,0,0,0.04)] transition-all duration-300 hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] hover:border-[#00a99d]/30"
+              className="flex flex-col items-center text-center md:items-start md:text-left bg-white p-8 rounded-[2rem] border border-gray-100 shadow-[0_8px_30px_rgba(0,0,0,0.04)] transition-all duration-300 hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] hover:border-[#00a99d]/30"
             >
               <motion.div
                 animate={{ y: [0, -4, 0] }}
@@ -449,7 +449,7 @@ export default function Demonstracao() {
             <motion.div
               variants={staggerItem}
               whileHover={{ y: -5, scale: 1.02 }}
-              className="flex flex-col items-start text-left bg-white p-8 rounded-[2rem] border border-gray-100 shadow-[0_8px_30px_rgba(0,0,0,0.04)] transition-all duration-300 hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] hover:border-[#00a99d]/30"
+              className="flex flex-col items-center text-center md:items-start md:text-left bg-white p-8 rounded-[2rem] border border-gray-100 shadow-[0_8px_30px_rgba(0,0,0,0.04)] transition-all duration-300 hover:shadow-[0_20px_40px_rgba(0,0,0,0.08)] hover:border-[#00a99d]/30"
             >
               <motion.div
                 animate={{ y: [0, -4, 0] }}
@@ -1005,7 +1005,7 @@ export default function Demonstracao() {
         style={{ backgroundImage: "url('/bg-final.png')" }}
       >
         {/* Overlay para legibilidade em toda a área */}
-        <div className="absolute inset-0 bg-white/60 pointer-events-none"></div>
+        <div className="absolute inset-0 bg-white/20 pointer-events-none"></div>
 
         <div className="relative z-10 max-w-7xl mx-auto px-4">
           {/* Part 1: Quem é a Nortyn */}
