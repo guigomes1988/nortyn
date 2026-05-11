@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Rocket, LineChart, Target, Check, ArrowUpRight, Database, Eye, Send, Lightbulb, ClipboardList, Search, TrendingUp, Instagram, Facebook, Linkedin, Youtube, Music, Menu, X } from 'lucide-react';
+import { Rocket, LineChart, Target, Check, ArrowUpRight, Database, Eye, Send, Lightbulb, ClipboardList, Search, TrendingUp, Instagram, Facebook, Linkedin, Youtube, Music, Menu, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { motion } from 'motion/react';
 import BrandGlow from './components/BrandGlow';
 import { siteConfig } from './config/siteConfig';
@@ -38,6 +38,23 @@ export default function Demonstracao() {
   const [testimonials, setTestimonials] = useState<any[]>([]);
   const [socialLinks, setSocialLinks] = useState<any[]>([]);
   const [phone, setPhone] = useState('');
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % desktopScreens.length);
+  const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + desktopScreens.length) % desktopScreens.length);
+
+  const desktopScreens = [
+    "/telas-desktop/01.jpeg",
+    "/telas-desktop/02.jpeg",
+    "/telas-desktop/03.jpeg",
+    "/telas-desktop/04.jpeg",
+    "/telas-desktop/05.jpeg",
+    "/telas-desktop/06.jpeg",
+    "/telas-desktop/07.jpeg",
+    "/telas-desktop/08.jpeg",
+    "/telas-desktop/09.jpeg",
+  ];
 
   useEffect(() => {
     const fetchTestimonials = async () => {
@@ -268,114 +285,26 @@ export default function Demonstracao() {
           </div>
 
           {/* Visual Diagram (Smartphone & Prints) */}
-          <div className="relative w-full max-w-5xl mx-auto flex justify-center items-start mt-4 h-[320px] md:h-[420px]">
+          <div className="relative w-full max-w-5xl mx-auto flex justify-center items-start mt-4 h-[400px] md:h-[600px]">
 
-            {/* Left Card (Simulação Vendedor) */}
-            <div className="hidden lg:flex absolute left-0 top-0 z-10 w-[280px] bg-white/5 backdrop-blur-xl rounded-2xl shadow-[0_0_30px_rgba(46,49,146,0.2)] border border-white/10 p-6 flex-col transition-transform duration-300 hover:scale-105 hover:z-30">
-              <h3 className="text-white font-bold text-lg mb-4">Foco em execução.</h3>
-              {/* Fake UI: Task list / Goal bars */}
-              <div className="flex flex-col gap-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-[#00a99d]/20 flex items-center justify-center">
-                    <Check className="w-4 h-4 text-[#00a99d]" strokeWidth={3} />
-                  </div>
-                  <div className="flex-1">
-                    <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
-                      <div className="w-3/4 h-full bg-[#00a99d] rounded-full"></div>
-                    </div>
-                    <div className="w-1/2 h-2 bg-gray-200 rounded-full mt-2"></div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-[#312783]/10 flex items-center justify-center">
-                    <Target className="w-4 h-4 text-[#312783]" strokeWidth={2} />
-                  </div>
-                  <div className="flex-1">
-                    <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
-                      <div className="w-1/2 h-full bg-[#312783] rounded-full"></div>
-                    </div>
-                    <div className="w-2/3 h-2 bg-gray-200 rounded-full mt-2"></div>
-                  </div>
-                </div>
-                <div className="w-full h-16 bg-white/5 rounded-xl border border-white/5 mt-2 p-3 flex flex-col justify-center gap-2">
-                  <div className="w-1/3 h-2 bg-white/10 rounded-full"></div>
-                  <div className="w-full h-2 bg-white/10 rounded-full"></div>
-                </div>
+            {/* Left Card */}
+            <div className="hidden lg:flex absolute left-0 top-[100px] z-10 w-[320px] flex-col transition-transform duration-300 hover:scale-105 hover:z-30">
+              <div className="rounded-xl overflow-hidden shadow-2xl">
+                <img src="/telas/02.png" alt="Execução" className="w-full h-auto object-cover" />
               </div>
             </div>
 
-            {/* Center Smartphone */}
-            <div className="relative z-20 w-[280px] md:w-[320px] aspect-[9/19] border-[8px] border-white/10 rounded-[2.5rem] bg-[#050505]/60 backdrop-blur-md shadow-[0_0_40px_rgba(0,169,157,0.2)] overflow-hidden group">
-              {/* Dynamic Island */}
-              <div className="absolute top-3 left-1/2 -translate-x-1/2 w-24 h-6 bg-white/10 backdrop-blur-sm rounded-full z-30"></div>
-
-              {/* Screen Content (Dashboard UI) */}
-              <div className="absolute inset-0 bg-[#050505]/40 pt-12 px-4 pb-4 flex flex-col gap-4">
-                {/* Header */}
-                <div className="flex justify-between items-center">
-                  <div className="w-24 h-4 bg-gray-200 rounded-full"></div>
-                  <div className="w-8 h-8 bg-gray-200 rounded-full"></div>
-                </div>
-
-                {/* Main KPI */}
-                <div className="w-full bg-[#312783] rounded-2xl p-4 text-white shadow-lg">
-                  <div className="w-16 h-3 bg-white/30 rounded-full mb-3"></div>
-                  <div className="w-32 h-6 bg-white rounded-full mb-4"></div>
-                  <div className="w-full h-2 bg-white/20 rounded-full overflow-hidden">
-                    <div className="w-4/5 h-full bg-[#00a99d] rounded-full"></div>
-                  </div>
-                </div>
-
-                {/* Grid KPIs */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="bg-white/5 p-3 rounded-xl border border-white/5 shadow-sm">
-                    <div className="w-8 h-8 bg-[#00a99d]/20 rounded-full mb-2"></div>
-                    <div className="w-12 h-2 bg-white/10 rounded-full mb-2"></div>
-                    <div className="w-20 h-4 bg-white/20 rounded-full"></div>
-                  </div>
-                  <div className="bg-white/5 p-3 rounded-xl border border-white/5 shadow-sm">
-                    <div className="w-8 h-8 bg-[#00a99d]/20 rounded-full mb-2"></div>
-                    <div className="w-12 h-2 bg-white/10 rounded-full mb-2"></div>
-                    <div className="w-20 h-4 bg-white/20 rounded-full"></div>
-                  </div>
-                </div>
-
-                {/* Chart Area */}
-                <div className="flex-1 bg-white/5 rounded-xl border border-white/5 shadow-sm p-3 flex items-end justify-between gap-1 mt-1">
-                  {[40, 70, 45, 90, 65, 80, 100].map((h, i) => (
-                    <div key={i} className="w-full bg-gradient-to-t from-[#312783] to-[#a9dbe9] rounded-t-sm" style={{ height: `${h}%` }}></div>
-                  ))}
-                </div>
+            {/* Center Screen */}
+            <div className="relative z-20 w-[320px] flex-col transition-transform duration-300 hover:scale-105">
+              <div className="rounded-xl overflow-hidden shadow-2xl">
+                <img src="/telas/01.png" alt="Nortyn App Dashboard" className="w-full h-auto object-cover" />
               </div>
             </div>
 
-            {/* Right Card (Simulação Gestor) */}
-            <div className="hidden lg:flex absolute right-0 top-0 z-10 w-[280px] bg-white/5 backdrop-blur-xl rounded-2xl shadow-[0_0_30px_rgba(0,169,157,0.2)] border border-white/10 p-6 flex-col transition-transform duration-300 hover:scale-105 hover:z-30">
-              <h3 className="text-white font-bold text-lg mb-4">Para diretores e gerentes.</h3>
-              {/* Fake UI: Consolidated Chart */}
-              <div className="flex flex-col gap-4">
-                <div className="flex justify-between items-end h-24 gap-2 border-b border-gray-100 pb-2">
-                  <div className="w-full bg-[#312783] rounded-t-md h-[40%]"></div>
-                  <div className="w-full bg-[#00a99d] rounded-t-md h-[70%]"></div>
-                  <div className="w-full bg-[#312783] rounded-t-md h-[50%]"></div>
-                  <div className="w-full bg-[#00a99d] rounded-t-md h-[90%]"></div>
-                  <div className="w-full bg-[#312783] rounded-t-md h-[60%]"></div>
-                  <div className="w-full bg-[#00a99d] rounded-t-md h-[100%]"></div>
-                </div>
-                <div className="flex justify-between items-center mt-2">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-[#312783] rounded-full"></div>
-                    <div className="w-12 h-2 bg-gray-200 rounded-full"></div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-[#00a99d] rounded-full"></div>
-                    <div className="w-12 h-2 bg-gray-200 rounded-full"></div>
-                  </div>
-                </div>
-                <div className="w-full h-12 bg-white/5 rounded-xl border border-white/5 mt-2 flex items-center justify-between px-4">
-                  <div className="w-16 h-3 bg-white/10 rounded-full"></div>
-                  <div className="w-10 h-4 bg-white/20 rounded-full"></div>
-                </div>
+            {/* Right Card */}
+            <div className="hidden lg:flex absolute right-0 top-[100px] z-10 w-[320px] flex-col transition-transform duration-300 hover:scale-105 hover:z-30">
+              <div className="rounded-xl overflow-hidden shadow-2xl">
+                <img src="/telas/03.png" alt="Gestão" className="w-full h-auto object-cover" />
               </div>
             </div>
 
@@ -469,6 +398,88 @@ export default function Demonstracao() {
                 Garanta metas bem distribuídas e um acompanhamento real de cada representante comercial.
               </p>
             </motion.div>
+          </motion.div>
+
+          {/* Elegant Gallery Section */}
+          <motion.div {...fadeInUp} className="mt-32 md:mt-48">
+            <div className="text-center mb-16">
+              <h3 className="text-3xl md:text-4xl font-bold font-atkinson text-[#1d1d30] mb-4">
+                Conheça a interface da Nortyn
+              </h3>
+              <p className="text-lg text-gray-500 max-w-2xl mx-auto">
+                Uma experiência visual pensada para facilitar a tomada de decisão rápida e intuitiva.
+              </p>
+            </div>
+
+            <div className="relative group max-w-5xl mx-auto">
+              {/* Slideshow Container */}
+              <div className="relative aspect-video rounded-[2rem] overflow-hidden shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-gray-100 bg-white group/slide">
+                {/* Browser-like Header */}
+                <div className="absolute top-0 left-0 right-0 h-10 bg-gray-50/80 backdrop-blur-md border-b border-gray-100 flex items-center px-6 gap-2 z-20">
+                  <div className="flex gap-1.5">
+                    <div className="w-2.5 h-2.5 rounded-full bg-[#ff5f56]"></div>
+                    <div className="w-2.5 h-2.5 rounded-full bg-[#ffbd2e]"></div>
+                    <div className="w-2.5 h-2.5 rounded-full bg-[#27c93f]"></div>
+                  </div>
+                  <div className="mx-auto bg-white/50 border border-gray-200 rounded-md h-6 w-1/3 flex items-center px-3 text-[10px] text-gray-400">
+                    app.nortyn.com.br
+                  </div>
+                </div>
+
+                {/* Slides */}
+                <div className="relative w-full h-full pt-10">
+                  <motion.div
+                    key={currentSlide}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.5, ease: "easeOut" }}
+                    className="w-full h-full relative cursor-zoom-in"
+                    onClick={() => setSelectedImage(desktopScreens[currentSlide])}
+                  >
+                    <img
+                      src={desktopScreens[currentSlide]}
+                      alt={`Interface Nortyn ${currentSlide + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                    
+                    {/* Hover Overlay */}
+                    <div className="absolute inset-0 bg-[#1d1d30]/5 opacity-0 group-hover/slide:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                      <div className="w-16 h-16 rounded-full bg-white/90 backdrop-blur-md shadow-2xl flex items-center justify-center text-[#00a99d]">
+                        <Search className="w-6 h-6" />
+                      </div>
+                    </div>
+                  </motion.div>
+                </div>
+
+                {/* Navigation Arrows */}
+                <button
+                  onClick={(e) => { e.stopPropagation(); prevSlide(); }}
+                  className="absolute left-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/90 shadow-xl border border-gray-100 flex items-center justify-center text-[#1d1d30] hover:bg-[#00a99d] hover:text-white transition-all duration-300 opacity-0 group-hover:opacity-100 z-30"
+                >
+                  <ChevronLeft className="w-6 h-6" />
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); nextSlide(); }}
+                  className="absolute right-6 top-1/2 -translate-y-1/2 w-12 h-12 rounded-full bg-white/90 shadow-xl border border-gray-100 flex items-center justify-center text-[#1d1d30] hover:bg-[#00a99d] hover:text-white transition-all duration-300 opacity-0 group-hover:opacity-100 z-30"
+                >
+                  <ChevronRight className="w-6 h-6" />
+                </button>
+              </div>
+
+              {/* Dots / Indicators */}
+              <div className="flex justify-center gap-3 mt-10">
+                {desktopScreens.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setCurrentSlide(index)}
+                    className={`h-1.5 transition-all duration-300 rounded-full ${
+                      currentSlide === index ? "w-8 bg-[#00a99d]" : "w-2.5 bg-gray-200 hover:bg-gray-300"
+                    }`}
+                  />
+                ))}
+              </div>
+            </div>
           </motion.div>
         </motion.div>
       </section>
@@ -1070,6 +1081,32 @@ export default function Demonstracao() {
           </p>
         </div>
       </footer>
+      {/* Image Lightbox Modal */}
+      {selectedImage && (
+        <div 
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-[#1d1d30]/95 backdrop-blur-xl p-4 md:p-8"
+          onClick={() => setSelectedImage(null)}
+        >
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="relative max-w-7xl w-full aspect-video rounded-3xl overflow-hidden shadow-[0_0_100px_rgba(0,169,157,0.3)] border border-white/10"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <img 
+              src={selectedImage} 
+              alt="Preview" 
+              className="w-full h-full object-contain bg-black/20"
+            />
+            <button 
+              onClick={() => setSelectedImage(null)}
+              className="absolute top-6 right-6 w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all"
+            >
+              <X className="w-6 h-6" />
+            </button>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }
