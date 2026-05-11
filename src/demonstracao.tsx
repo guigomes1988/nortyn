@@ -32,11 +32,12 @@ const staggerItem = {
   }
 };
 
-export default function App() {
+export default function Demonstracao() {
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [testimonials, setTestimonials] = useState<any[]>([]);
   const [socialLinks, setSocialLinks] = useState<any[]>([]);
+  const [phone, setPhone] = useState('');
 
   useEffect(() => {
     const fetchTestimonials = async () => {
@@ -67,6 +68,24 @@ export default function App() {
     fetchSocialLinks();
   }, []);
 
+  const handlePhone = (e: React.ChangeEvent<HTMLInputElement>) => {
+    let value = e.target.value.replace(/\D/g, '');
+    if (value.length > 11) value = value.slice(0, 11);
+
+    if (value.length > 10) {
+      // Mobile: (99) 99999-9999
+      value = value.replace(/^(\d{2})(\d{5})(\d{4}).*/, '($1) $2-$3');
+    } else if (value.length > 2) {
+      // Landline: (99) 9999-9999
+      value = value.replace(/^(\d{2})(\d{4})(\d{0,4}).*/, '($1) $2-$3');
+    } else if (value.length > 0) {
+      // Area code: (99
+      value = value.replace(/^(\d{0,2})/, '($1');
+    }
+
+    setPhone(value);
+  };
+
   const getSocialIcon = (platform: string) => {
     switch (platform.toLowerCase()) {
       case 'facebook': return <Facebook className="w-6 h-6" />;
@@ -86,10 +105,12 @@ export default function App() {
       email: formData.get('email'),
       company: formData.get('company'),
       role: formData.get('role'),
+      phone: phone,
+      source: "Demonstração",
     };
 
     try {
-      const response = await fetch('/api/leads', {
+      const response = await fetch('https://webhook.hvjtech.com.br/webhook/tfaa_iniciaConversa', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -125,7 +146,9 @@ export default function App() {
 
         {/* Header */}
         <header className="w-full max-w-7xl mx-auto px-6 py-6 flex items-center justify-between relative z-50">
-          <img src="/nortyn-bco.png" alt="Nortyn" className="h-[44px] w-auto relative z-50" />
+          <a href="/" className="relative z-50">
+            <img src="/nortyn-bco.png" alt="Nortyn" className="h-[44px] w-auto" />
+          </a>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-white/80">
@@ -424,7 +447,7 @@ export default function App() {
               </motion.div>
               <h3 className="text-xl font-bold text-[#1d1d30] mb-4">Acompanhamento em Tempo Real</h3>
               <p className="text-gray-500 leading-relaxed">
-                Tenha visão D-1 de vendas e saiba exatamente o que está acontecendo com o seu faturamento hoje.
+                Tenha visão clara das vendas e saiba exatamente o que está acontecendo com o seu faturamento hoje.
               </p>
             </motion.div>
 
@@ -561,7 +584,7 @@ export default function App() {
               className="relative overflow-hidden lg:col-span-1 lg:row-span-2 bg-[#312783] text-white rounded-3xl p-8 transition-transform shadow-sm flex flex-col min-h-[450px]"
             >
               <div className="relative z-10">
-                <h3 className="text-2xl font-bold mb-4">Visão D-1 e Dashboards em Tempo Real</h3>
+                <h3 className="text-2xl font-bold mb-4">Vendas e Dashboards em Tempo Real</h3>
                 <p className="text-white/80 text-sm leading-relaxed">
                   Acompanhe o Real x Meta consolidado diariamente. A diretoria ganha relatórios estruturados para tomar decisões sem depender de planilhas.
                 </p>
@@ -817,6 +840,7 @@ export default function App() {
               </motion.div>
             ) : (
               <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <input type="hidden" name="source" value="Demonstração" />
                 {/* Full Name */}
                 <div className="col-span-full">
                   <label htmlFor="fullName" className="block text-sm font-semibold text-gray-700 mb-1.5">Nome completo</label>
@@ -839,6 +863,21 @@ export default function App() {
                     name="email"
                     required
                     placeholder="joao@suaempresa.com.br"
+                    className="bg-white border border-gray-300 text-gray-900 rounded-xl px-4 py-3.5 focus:ring-2 focus:ring-[#009a93] focus:border-transparent outline-none transition-all w-full"
+                  />
+                </div>
+
+                {/* Phone / WhatsApp */}
+                <div className="col-span-full">
+                  <label htmlFor="phone" className="block text-sm font-semibold text-gray-700 mb-1.5">Telefone / WhatsApp</label>
+                  <input
+                    type="tel"
+                    id="phone"
+                    name="phone"
+                    required
+                    value={phone}
+                    onChange={handlePhone}
+                    placeholder="(00) 00000-0000"
                     className="bg-white border border-gray-300 text-gray-900 rounded-xl px-4 py-3.5 focus:ring-2 focus:ring-[#009a93] focus:border-transparent outline-none transition-all w-full"
                   />
                 </div>
@@ -909,7 +948,7 @@ export default function App() {
               </h2>
 
               <p className="text-gray-600 text-lg mb-4">
-                Nosso time de especialistas tem mais de 25 anos desenvolvendo soluções para áreas comerciais. Conhece o chão de fábrica, a pressão por meta e a realidade do representante em campo.
+                Nosso time de especialistas desenvolve há 25 anos soluções para áreas comerciais. Conhece o chão de fábrica, a pressão por meta e a realidade do representante em campo.
               </p>
               <p className="text-gray-600 text-lg mb-8">
                 A Nortyn entrega organização, clareza e execução. Tecnologia aplicada à rotina real da indústria.
@@ -961,7 +1000,7 @@ export default function App() {
               </h2>
 
               <p className="text-lg text-white/80 mb-10 max-w-2xl">
-                Tenha visão D-1, metas bem distribuídas e plano de ação estruturado. Veja na demonstração como revolucionar a sua operação.
+                Tenha visão clara das vendas, metas bem distribuídas e plano de ação estruturado. Veja na demonstração como revolucionar a sua operação.
               </p>
 
               {/* Buttons */}
@@ -990,10 +1029,10 @@ export default function App() {
             </p>
             <div className="flex items-center gap-5">
               {socialLinks.filter(link => link.is_active).map(link => (
-                <a 
+                <a
                   key={link.id}
-                  href={link.url} 
-                  target="_blank" 
+                  href={link.url}
+                  target="_blank"
                   rel="noopener noreferrer"
                   className="text-white hover:text-[#009a93] transition-colors"
                 >

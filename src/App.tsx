@@ -1,7 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import LandingPage from './LandingPage';
-import NortynLP from './NortynLP';
+import Diagnostico from './diagnostico';
+import Demonstracao from './demonstracao';
 import AdminLogin from './components/AdminLogin';
 import AdminDashboard from './components/AdminDashboard';
 import { AdminProvider, useAdmin } from './components/AdminContext';
@@ -27,8 +27,8 @@ export default function App() {
       <AdminProvider>
         <AdminToolbar />
         <Routes>
-          <Route path="/" element={<NortynLP />} />
-          <Route path="/diagnostico" element={<LandingPage />} />
+          <Route path="/" element={<Demonstracao />} />
+          <Route path="/diagnostico" element={<Diagnostico />} />
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route 
             path="/admin" 
