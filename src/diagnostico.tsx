@@ -128,7 +128,7 @@ export default function Diagnostico() {
     setStatus('loading');
 
     try {
-      const webhookUrl = appSettings?.webhook_url || 'https://webhook.hvjtech.com.br/webhook/tfaa_iniciaConversa';
+      const webhookUrl = appSettings?.webhook_url || 'https://n8n.hvjtech.com.br/webhook-test/tfaa_iniciaConversa';
       const response = await fetch(webhookUrl, {
         method: 'POST',
         headers: {
@@ -695,159 +695,175 @@ export default function Diagnostico() {
               />
             </div>
 
-            <form onSubmit={handleSubmit} className="w-full">
-              <input type="hidden" name="source" value="Diagnóstico" />
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-                {/* Nome completo */}
-                <div className="col-span-1">
-                  <label className="block text-sm font-semibold text-gray-300 mb-2">Nome completo</label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    placeholder="Seu nome completo"
-                    className="w-full bg-white/10 backdrop-blur-md border border-white/20 text-white placeholder-gray-400 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#009a93]/50 focus:border-[#009a93] transition-all"
-                  />
+            {status === 'success' ? (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="bg-white/5 backdrop-blur-md border border-[#009a93]/30 p-10 md:p-16 rounded-[2.5rem] text-center max-w-2xl mx-auto shadow-2xl"
+              >
+                <div className="w-20 h-20 bg-[#009a93] rounded-full flex items-center justify-center mx-auto mb-8 shadow-lg shadow-[#009a93]/30">
+                  <Check className="text-white w-10 h-10" strokeWidth={3} />
                 </div>
-
-                {/* E-mail corporativo */}
-                <div className="col-span-1">
-                  <label className="block text-sm font-semibold text-gray-300 mb-2">E-mail corporativo</label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    placeholder="seu@email.com"
-                    className="w-full bg-white/10 backdrop-blur-md border border-white/20 text-white placeholder-gray-400 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#009a93]/50 focus:border-[#009a93] transition-all"
-                  />
-                </div>
-
-                {/* Telefone ou WhatsApp */}
-                <div className="col-span-1">
-                  <label className="block text-sm font-semibold text-gray-300 mb-2">Telefone ou WhatsApp</label>
-                  <input
-                    type="tel"
-                    placeholder="(00) 00000-0000"
-                    value={phone}
-                    onChange={handlePhone}
-                    className="w-full bg-white/10 backdrop-blur-md border border-white/20 text-white placeholder-gray-400 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#009a93]/50 focus:border-[#009a93] transition-all"
-                  />
-                </div>
-
-                {/* Empresa */}
-                <div className="col-span-1">
-                  <label className="block text-sm font-semibold text-gray-300 mb-2">Nome da Empresa</label>
-                  <input
-                    type="text"
-                    name="company"
-                    value={formData.company}
-                    onChange={handleInputChange}
-                    placeholder="Empresa LTDA"
-                    className="w-full bg-white/10 backdrop-blur-md border border-white/20 text-white placeholder-gray-400 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#009a93]/50 focus:border-[#009a93] transition-all"
-                  />
-                </div>
-
-                {/* Cargo */}
-                <div className="col-span-1">
-                  <label className="block text-sm font-semibold text-gray-300 mb-2">Cargo</label>
-                  <div className="relative">
-                    <select
-                      name="role"
-                      value={formData.role}
-                      onChange={handleInputChange}
-                      className="w-full bg-white/10 backdrop-blur-md border border-white/20 text-white rounded-xl px-4 py-3 appearance-none focus:outline-none focus:ring-2 focus:ring-[#009a93]/50 focus:border-[#009a93] transition-all"
-                    >
-                      <option value="" disabled className="text-slate-900">Selecione</option>
-                      <option value="diretor" className="text-slate-900">Diretor(a)</option>
-                      <option value="gerente" className="text-slate-900">Gerente</option>
-                      <option value="coordenador" className="text-slate-900">Coordenador(a)</option>
-                      <option value="analista" className="text-slate-900">Analista</option>
-                      <option value="outro" className="text-slate-900">Outro</option>
-                    </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-400">
-                      <ChevronDown className="w-4 h-4" />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Segmento de atuação */}
-                <div className="col-span-1">
-                  <label className="block text-sm font-semibold text-gray-300 mb-2">Segmento de atuação</label>
-                  <div className="relative">
-                    <select
-                      name="sector"
-                      value={formData.sector}
-                      onChange={handleInputChange}
-                      className="w-full bg-white/10 backdrop-blur-md border border-white/20 text-white rounded-xl px-4 py-3 appearance-none focus:outline-none focus:ring-2 focus:ring-[#009a93]/50 focus:border-[#009a93] transition-all"
-                    >
-                      <option value="" disabled className="text-slate-900">Selecione</option>
-                      <option value="industria" className="text-slate-900">Indústria</option>
-                      <option value="varejo" className="text-slate-900">Varejo</option>
-                      <option value="servicos" className="text-slate-900">Serviços</option>
-                      <option value="tecnologia" className="text-slate-900">Tecnologia</option>
-                      <option value="outro" className="text-slate-900">Outro</option>
-                    </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-400">
-                      <ChevronDown className="w-4 h-4" />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Faturamento Anual */}
-                <div className="col-span-1 border-t border-white/5 pt-6 sm:col-span-2 lg:col-span-3">
-                  <label className="block text-sm font-semibold text-gray-300 mb-4">Qual o faturamento anual da sua empresa?</label>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {[
-                      "Até R$ 5 mi",
-                      "R$ 5 mi a R$ 20 mi",
-                      "R$ 20 mi a R$ 50 mi",
-                      "R$ 50 mi a R$ 100 mi",
-                      "Acima de R$ 100 mi"
-                    ].map((option) => (
-                      <button
-                        key={option}
-                        type="button"
-                        onClick={() => setFormData(prev => ({ ...prev, revenue: option }))}
-                        className={`px-4 py-3 rounded-xl border transition-all text-sm font-medium ${formData.revenue === option
-                          ? "bg-[#009a93] border-[#009a93] text-white shadow-lg shadow-[#009a93]/30"
-                          : "bg-white/5 border-white/10 text-gray-400 hover:bg-white/10 hover:border-white/20"
-                          }`}
-                      >
-                        {option}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-12 flex flex-col items-center">
-                <button
-                  type="submit"
-                  disabled={status === 'loading'}
-                  className="w-full md:w-auto px-10 py-4 font-atkinson rounded-full bg-[#009a93] text-white font-bold text-lg hover:bg-[#00b3ab] transition-colors shadow-lg shadow-[#009a93]/30 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {status === 'loading' ? 'Enviando...' : 'Receber meu diagnóstico'}
-                </button>
-
-                {status === 'success' && (
-                  <p className="mt-4 text-emerald-400 font-medium flex items-center gap-2">
-                    <Check className="w-5 h-5" /> Dados enviados com sucesso!
-                  </p>
-                )}
-
-                {status === 'error' && (
-                  <p className="mt-4 text-red-400 font-medium">
-                    Erro ao enviar. Tente novamente ou use o WhatsApp.
-                  </p>
-                )}
-
-                <p className="mt-6 text-xs text-gray-400 text-center max-w-md leading-relaxed">
-                  Seus dados são utilizados apenas para envio do diagnóstico e contato da Nortyn. Eles não são compartilhados com 3ºs públicos.
+                <h3 className="text-3xl font-bold text-white mb-6">Diagnóstico Solicitado com Sucesso!</h3>
+                <p className="text-gray-300 text-lg leading-relaxed mb-8">
+                  Obrigado pelo seu interesse. Nosso time de especialistas já recebeu suas informações e iniciará a análise da sua gestão comercial. Entraremos em contato em breve pelo e-mail ou WhatsApp fornecido.
                 </p>
-              </div>
-            </form>
+                <button
+                  onClick={() => setStatus('idle')}
+                  className="px-8 py-3 rounded-full border border-white/20 text-white font-medium hover:bg-white/5 hover:border-white/30 transition-all cursor-pointer"
+                >
+                  Enviar outro diagnóstico
+                </button>
+              </motion.div>
+            ) : (
+              <form onSubmit={handleSubmit} className="w-full">
+                <input type="hidden" name="source" value="Diagnóstico" />
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+                  {/* Nome completo */}
+                  <div className="col-span-1">
+                    <label className="block text-sm font-semibold text-gray-300 mb-2">Nome completo</label>
+                    <input
+                      type="text"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleInputChange}
+                      placeholder="Seu nome completo"
+                      className="w-full bg-white/10 backdrop-blur-md border border-white/20 text-white placeholder-gray-400 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#009a93]/50 focus:border-[#009a93] transition-all"
+                    />
+                  </div>
+
+                  {/* E-mail corporativo */}
+                  <div className="col-span-1">
+                    <label className="block text-sm font-semibold text-gray-300 mb-2">E-mail corporativo</label>
+                    <input
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      placeholder="seu@email.com"
+                      className="w-full bg-white/10 backdrop-blur-md border border-white/20 text-white placeholder-gray-400 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#009a93]/50 focus:border-[#009a93] transition-all"
+                    />
+                  </div>
+
+                  {/* Telefone ou WhatsApp */}
+                  <div className="col-span-1">
+                    <label className="block text-sm font-semibold text-gray-300 mb-2">Telefone ou WhatsApp</label>
+                    <input
+                      type="tel"
+                      placeholder="(00) 00000-0000"
+                      value={phone}
+                      onChange={handlePhone}
+                      className="w-full bg-white/10 backdrop-blur-md border border-white/20 text-white placeholder-gray-400 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#009a93]/50 focus:border-[#009a93] transition-all"
+                    />
+                  </div>
+
+                  {/* Empresa */}
+                  <div className="col-span-1">
+                    <label className="block text-sm font-semibold text-gray-300 mb-2">Nome da Empresa</label>
+                    <input
+                      type="text"
+                      name="company"
+                      value={formData.company}
+                      onChange={handleInputChange}
+                      placeholder="Empresa LTDA"
+                      className="w-full bg-white/10 backdrop-blur-md border border-white/20 text-white placeholder-gray-400 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-[#009a93]/50 focus:border-[#009a93] transition-all"
+                    />
+                  </div>
+
+                  {/* Cargo */}
+                  <div className="col-span-1">
+                    <label className="block text-sm font-semibold text-gray-300 mb-2">Cargo</label>
+                    <div className="relative">
+                      <select
+                        name="role"
+                        value={formData.role}
+                        onChange={handleInputChange}
+                        className="w-full bg-white/10 backdrop-blur-md border border-white/20 text-white rounded-xl px-4 py-3 appearance-none focus:outline-none focus:ring-2 focus:ring-[#009a93]/50 focus:border-[#009a93] transition-all"
+                      >
+                        <option value="" disabled className="text-slate-900">Selecione</option>
+                        <option value="diretor" className="text-slate-900">Diretor(a)</option>
+                        <option value="gerente" className="text-slate-900">Gerente</option>
+                        <option value="coordenador" className="text-slate-900">Coordenador(a)</option>
+                        <option value="analista" className="text-slate-900">Analista</option>
+                        <option value="outro" className="text-slate-900">Outro</option>
+                      </select>
+                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-400">
+                        <ChevronDown className="w-4 h-4" />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Segmento de atuação */}
+                  <div className="col-span-1">
+                    <label className="block text-sm font-semibold text-gray-300 mb-2">Segmento de atuação</label>
+                    <div className="relative">
+                      <select
+                        name="sector"
+                        value={formData.sector}
+                        onChange={handleInputChange}
+                        className="w-full bg-white/10 backdrop-blur-md border border-white/20 text-white rounded-xl px-4 py-3 appearance-none focus:outline-none focus:ring-2 focus:ring-[#009a93]/50 focus:border-[#009a93] transition-all"
+                      >
+                        <option value="" disabled className="text-slate-900">Selecione</option>
+                        <option value="industria" className="text-slate-900">Indústria</option>
+                        <option value="varejo" className="text-slate-900">Varejo</option>
+                        <option value="servicos" className="text-slate-900">Serviços</option>
+                        <option value="tecnologia" className="text-slate-900">Tecnologia</option>
+                        <option value="outro" className="text-slate-900">Outro</option>
+                      </select>
+                      <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-400">
+                        <ChevronDown className="w-4 h-4" />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Faturamento Anual */}
+                  <div className="col-span-1 border-t border-white/5 pt-6 sm:col-span-2 lg:col-span-3">
+                    <label className="block text-sm font-semibold text-gray-300 mb-4">Qual o faturamento anual da sua empresa?</label>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                      {[
+                        "Até R$ 5 mi",
+                        "R$ 5 mi a R$ 20 mi",
+                        "R$ 20 mi a R$ 50 mi",
+                        "R$ 50 mi a R$ 100 mi",
+                        "Acima de R$ 100 mi"
+                      ].map((option) => (
+                        <button
+                          key={option}
+                          type="button"
+                          onClick={() => setFormData(prev => ({ ...prev, revenue: option }))}
+                          className={`px-4 py-3 rounded-xl border transition-all text-sm font-medium ${formData.revenue === option
+                            ? "bg-[#009a93] border-[#009a93] text-white shadow-lg shadow-[#009a93]/30"
+                            : "bg-white/5 border-white/10 text-gray-400 hover:bg-white/10 hover:border-white/20"
+                            }`}
+                        >
+                          {option}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-12 flex flex-col items-center">
+                  <button
+                    type="submit"
+                    disabled={status === 'loading'}
+                    className="w-full md:w-auto px-10 py-4 font-atkinson rounded-full bg-[#009a93] text-white font-bold text-lg hover:bg-[#00b3ab] transition-colors shadow-lg shadow-[#009a93]/30 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {status === 'loading' ? 'Enviando...' : 'Receber meu diagnóstico'}
+                  </button>
+
+                  {status === 'error' && (
+                    <p className="mt-4 text-red-400 font-medium">
+                      Erro ao enviar. Tente novamente ou use o WhatsApp.
+                    </p>
+                  )}
+
+                  <p className="mt-6 text-xs text-gray-400 text-center max-w-md leading-relaxed">
+                    Seus dados são utilizados apenas para envio do diagnóstico e contato da Nortyn. Eles não são compartilhados com 3ºs públicos.
+                  </p>
+                </div>
+              </form>
+            )}
           </div>
         </section>
 

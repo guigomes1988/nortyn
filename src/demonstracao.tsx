@@ -191,7 +191,7 @@ export default function Demonstracao() {
     };
 
     try {
-      const webhookUrl = appSettings?.webhook_url || 'https://webhook.hvjtech.com.br/webhook/tfaa_iniciaConversa';
+      const webhookUrl = appSettings?.webhook_url || 'https://n8n.hvjtech.com.br/webhook-test/tfaa_iniciaConversa';
       const response = await fetch(webhookUrl, {
         method: 'POST',
         headers: {

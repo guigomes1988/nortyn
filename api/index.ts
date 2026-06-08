@@ -219,7 +219,7 @@ async function initDB() {
     if (existingSettings.length === 0) {
       await sql`
         INSERT INTO app_settings (key, value) VALUES 
-        ('webhook_url', 'https://webhook.hvjtech.com.br/webhook/tfaa_iniciaConversa'),
+        ('webhook_url', 'https://n8n.hvjtech.com.br/webhook-test/tfaa_iniciaConversa'),
         ('head_scripts', ''),
         ('body_scripts', '')
       `;
