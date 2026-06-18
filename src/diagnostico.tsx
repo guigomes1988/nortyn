@@ -100,21 +100,22 @@ export default function Diagnostico() {
   };
 
   const handlePhone = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let value = e.target.value.replace(/\D/g, '');
-    if (value.length > 11) value = value.slice(0, 11);
-
-    if (value.length > 10) {
-      // Mobile: (99) 99999-9999
-      value = value.replace(/^(\d{2})(\d{5})(\d{4}).*/, '($1) $2-$3');
-    } else if (value.length > 2) {
-      // Landline: (99) 9999-9999
-      value = value.replace(/^(\d{2})(\d{4})(\d{0,4}).*/, '($1) $2-$3');
-    } else if (value.length > 0) {
-      // Area code: (99
-      value = value.replace(/^(\d{0,2})/, '($1');
+    const digits = e.target.value.replace(/\D/g, '');
+    let formatted = '';
+    
+    if (digits.length === 0) {
+      formatted = '';
+    } else if (digits.length <= 2) {
+      formatted = `(${digits}`;
+    } else if (digits.length <= 6) {
+      formatted = `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
+    } else if (digits.length <= 10) {
+      formatted = `(${digits.slice(0, 2)}) ${digits.slice(2, 6)}-${digits.slice(6)}`;
+    } else {
+      formatted = `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7, 11)}`;
     }
 
-    setPhone(value);
+    setPhone(formatted);
   };
 
   const handleSubmit = async (e?: React.FormEvent) => {
