@@ -817,16 +817,17 @@ export default function Diagnostico() {
                     </div>
                   </div>
 
-                  {/* Faturamento Anual */}
+                  {/* Tamanho da equipe de vendas */}
                   <div className="col-span-1 border-t border-white/5 pt-6 sm:col-span-2 lg:col-span-3">
-                    <label className="block text-sm font-semibold text-gray-300 mb-4">Qual o faturamento anual da sua empresa?</label>
+                    <label className="block text-sm font-semibold text-gray-300 mb-4">Tamanho da equipe de vendas</label>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                       {[
-                        "Até R$ 5 mi",
-                        "R$ 5 mi a R$ 20 mi",
-                        "R$ 20 mi a R$ 50 mi",
-                        "R$ 50 mi a R$ 100 mi",
-                        "Acima de R$ 100 mi"
+                        "0 - 2 vendedores",
+                        "3 - 5 vendedores",
+                        "6 - 10 vendedores",
+                        "11 - 20 vendedores",
+                        "20 - 30 vendedores",
+                        "Acima de 30 vendedores"
                       ].map((option) => (
                         <button
                           key={option}
