@@ -86,7 +86,10 @@ export default function AdminDashboard() {
   const [newUser, setNewUser] = useState({ name: '', email: '', password: '' });
 
   useEffect(() => {
-    if (activeTab === 'testimonials') fetchTestimonials();
+    if (activeTab === 'testimonials') {
+      fetchTestimonials();
+      fetchAppSettings();
+    }
     if (activeTab === 'gallery') fetchGallery();
     if (activeTab === 'settings') {
       fetchAppSettings();
@@ -263,6 +266,31 @@ export default function AdminDashboard() {
       setMessage({ text: 'Erro ao salvar configurações.', type: 'error' });
     } finally {
       setIsSavingSettings(false);
+    }
+  };
+
+  const handleToggleTestimonials = async (show: boolean) => {
+    const val = show ? 'true' : 'false';
+    setAppSettings(prev => ({ ...prev, show_testimonials: val }));
+    try {
+      const response = await fetch('/api/settings', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ settings: { show_testimonials: val } })
+      });
+      if (response.ok) {
+        setMessage({ 
+          text: show ? 'Seção de depoimentos ativada no site!' : 'Seção de depoimentos ocultada no site!', 
+          type: 'success' 
+        });
+      } else {
+        setMessage({ text: 'Erro ao atualizar visibilidade da seção.', type: 'error' });
+      }
+    } catch (err) {
+      setMessage({ text: 'Erro ao conectar com o servidor.', type: 'error' });
     }
   };
 
@@ -493,6 +521,41 @@ export default function AdminDashboard() {
 
           {activeTab === 'testimonials' && (
             <div className="flex flex-col gap-6">
+              {/* Toggle Section Visibility */}
+              <div className="bg-[#0B091E]/60 border border-white/10 rounded-3xl p-6 backdrop-blur-sm flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <div className={`p-3 rounded-2xl ${appSettings.show_testimonials !== 'false' ? 'bg-nortyn-secondary/10 text-nortyn-secondary' : 'bg-gray-800 text-gray-400'}`}>
+                    <MessageSquare className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-lg flex items-center gap-2 flex-wrap">
+                      Exibir Seção no Site
+                      <span className={`text-xs px-2.5 py-0.5 rounded-full font-semibold ${appSettings.show_testimonials !== 'false' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'}`}>
+                        {appSettings.show_testimonials !== 'false' ? 'Visível' : 'Oculto'}
+                      </span>
+                    </h3>
+                    <p className="text-sm text-gray-400">
+                      Ligue ou desligue a exibição do bloco "Empresas que confiam na Nortyn" no site.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => handleToggleTestimonials(appSettings.show_testimonials === 'false')}
+                  className={`relative inline-flex h-8 w-14 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                    appSettings.show_testimonials !== 'false' ? 'bg-nortyn-secondary' : 'bg-gray-700'
+                  }`}
+                  aria-pressed={appSettings.show_testimonials !== 'false'}
+                >
+                  <span
+                    aria-hidden="true"
+                    className={`pointer-events-none inline-block h-7 w-7 transform rounded-full bg-white shadow-lg ring-0 transition duration-200 ease-in-out ${
+                      appSettings.show_testimonials !== 'false' ? 'translate-x-6' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
+              </div>
+
               {isTestimonialsLoading ? (
                 <div className="flex items-center justify-center py-20">
                   <Loader2 className="w-10 h-10 animate-spin text-nortyn-secondary opacity-50" />

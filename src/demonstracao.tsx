@@ -547,86 +547,88 @@ export default function Demonstracao() {
       </section>
 
       {/* Social Proof / Testimonials Section */}
-      <section className="w-full bg-gradient-to-br from-[#312783]/15 via-white to-[#00a99d]/15 py-24 md:py-40 lg:py-48 overflow-hidden">
-        <style>
-          {`
-            @keyframes scroll {
-              0% { transform: translateX(0); }
-              100% { transform: translateX(calc(-50% - 1.5rem)); }
-            }
-            .animate-scroll {
-              animation: scroll 40s linear infinite;
-            }
-          `}
-        </style>
+      {appSettings?.show_testimonials !== 'false' && (
+        <section className="w-full bg-gradient-to-br from-[#312783]/15 via-white to-[#00a99d]/15 py-24 md:py-40 lg:py-48 overflow-hidden">
+          <style>
+            {`
+              @keyframes scroll {
+                0% { transform: translateX(0); }
+                100% { transform: translateX(calc(-50% - 1.5rem)); }
+              }
+              .animate-scroll {
+                animation: scroll 40s linear infinite;
+              }
+            `}
+          </style>
 
-        <motion.div {...fadeInUp} className="max-w-7xl mx-auto px-6 mb-16">
-          <span className="text-sm font-bold tracking-widest uppercase mb-4 block text-[#312783] opacity-90">
-            DEPOIMENTOS
-          </span>
-          <h2 className="text-4xl md:text-5xl font-bold font-atkinson text-[#1d1d30] leading-tight mb-6">
-            Empresas que confiam na Nortyn
-          </h2>
-          <p className="text-xl text-gray-600 max-w-2xl">
-            A Nortyn já é a plataforma de dezenas de empresas que buscam escalabilidade.
-          </p>
-        </motion.div>
+          <motion.div {...fadeInUp} className="max-w-7xl mx-auto px-6 mb-16">
+            <span className="text-sm font-bold tracking-widest uppercase mb-4 block text-[#312783] opacity-90">
+              DEPOIMENTOS
+            </span>
+            <h2 className="text-4xl md:text-5xl font-bold font-atkinson text-[#1d1d30] leading-tight mb-6">
+              Empresas que confiam na Nortyn
+            </h2>
+            <p className="text-xl text-gray-600 max-w-2xl">
+              A Nortyn já é a plataforma de dezenas de empresas que buscam escalabilidade.
+            </p>
+          </motion.div>
 
-        {/* Marquee Container */}
-        <div className="relative w-full overflow-hidden flex">
-          <div className="flex gap-6 animate-scroll hover:[animation-play-state:paused] w-max px-6 py-8">
-            {testimonials.length > 0 ? (
-              <>
-                {/* --- FIRST SET --- */}
-                {testimonials.map((item, index) => (
-                  <div key={`set1-${index}`} className="bg-white rounded-[2.5rem] p-10 w-[420px] flex-shrink-0 border border-gray-100 shadow-[0_10px_40px_rgba(0,0,0,0.03)] flex flex-col justify-between relative overflow-hidden group">
-                    <div className="absolute top-6 right-8 text-6xl text-gray-100 font-serif opacity-50 group-hover:text-[#00a99d]/20 transition-colors">“</div>
-                    <div className="relative z-10">
-                      <div className="flex items-center gap-4 mb-8">
-                        <img src={item.avatar_url} alt="Avatar" className="w-14 h-14 rounded-full object-cover border-2 border-white shadow-sm" />
-                        <div>
-                          <p className="font-bold text-[#1d1d30]">{item.client_name}</p>
-                          <p className="text-gray-400 text-xs uppercase tracking-wider">{item.company_role.split(' ')[0]}</p>
+          {/* Marquee Container */}
+          <div className="relative w-full overflow-hidden flex">
+            <div className="flex gap-6 animate-scroll hover:[animation-play-state:paused] w-max px-6 py-8">
+              {testimonials.length > 0 ? (
+                <>
+                  {/* --- FIRST SET --- */}
+                  {testimonials.map((item, index) => (
+                    <div key={`set1-${index}`} className="bg-white rounded-[2.5rem] p-10 w-[420px] flex-shrink-0 border border-gray-100 shadow-[0_10px_40px_rgba(0,0,0,0.03)] flex flex-col justify-between relative overflow-hidden group">
+                      <div className="absolute top-6 right-8 text-6xl text-gray-100 font-serif opacity-50 group-hover:text-[#00a99d]/20 transition-colors">“</div>
+                      <div className="relative z-10">
+                        <div className="flex items-center gap-4 mb-8">
+                          <img src={item.avatar_url} alt="Avatar" className="w-14 h-14 rounded-full object-cover border-2 border-white shadow-sm" />
+                          <div>
+                            <p className="font-bold text-[#1d1d30]">{item.client_name}</p>
+                            <p className="text-gray-400 text-xs uppercase tracking-wider">{item.company_role.split(' ')[0]}</p>
+                          </div>
                         </div>
+                        <p className="text-[#1d1d30] text-lg leading-relaxed mb-8">
+                          "{item.content}"
+                        </p>
                       </div>
-                      <p className="text-[#1d1d30] text-lg leading-relaxed mb-8">
-                        "{item.content}"
-                      </p>
+                      <div className="flex items-center justify-between border-t border-gray-50 pt-6">
+                        <p className="text-gray-500 text-sm font-medium">{item.company_role}</p>
+                        <div className="w-8 h-4 bg-gray-100 rounded opacity-50"></div>
+                      </div>
                     </div>
-                    <div className="flex items-center justify-between border-t border-gray-50 pt-6">
-                      <p className="text-gray-500 text-sm font-medium">{item.company_role}</p>
-                      <div className="w-8 h-4 bg-gray-100 rounded opacity-50"></div>
-                    </div>
-                  </div>
-                ))}
+                  ))}
 
-                {/* --- SECOND SET --- */}
-                {testimonials.map((item, index) => (
-                  <div key={`set2-${index}`} className="bg-white rounded-[2.5rem] p-10 w-[420px] flex-shrink-0 border border-gray-100 shadow-[0_10px_40px_rgba(0,0,0,0.03)] flex flex-col justify-between relative overflow-hidden group">
-                    <div className="absolute top-6 right-8 text-6xl text-gray-100 font-serif opacity-50 group-hover:text-[#00a99d]/20 transition-colors">“</div>
-                    <div className="relative z-10">
-                      <div className="flex items-center gap-4 mb-8">
-                        <img src={item.avatar_url} alt="Avatar" className="w-14 h-14 rounded-full object-cover border-2 border-white shadow-sm" />
-                        <div>
-                          <p className="font-bold text-[#1d1d30]">{item.client_name}</p>
-                          <p className="text-gray-400 text-xs uppercase tracking-wider">{item.company_role.split(' ')[0]}</p>
+                  {/* --- SECOND SET --- */}
+                  {testimonials.map((item, index) => (
+                    <div key={`set2-${index}`} className="bg-white rounded-[2.5rem] p-10 w-[420px] flex-shrink-0 border border-gray-100 shadow-[0_10px_40px_rgba(0,0,0,0.03)] flex flex-col justify-between relative overflow-hidden group">
+                      <div className="absolute top-6 right-8 text-6xl text-gray-100 font-serif opacity-50 group-hover:text-[#00a99d]/20 transition-colors">“</div>
+                      <div className="relative z-10">
+                        <div className="flex items-center gap-4 mb-8">
+                          <img src={item.avatar_url} alt="Avatar" className="w-14 h-14 rounded-full object-cover border-2 border-white shadow-sm" />
+                          <div>
+                            <p className="font-bold text-[#1d1d30]">{item.client_name}</p>
+                            <p className="text-gray-400 text-xs uppercase tracking-wider">{item.company_role.split(' ')[0]}</p>
+                          </div>
                         </div>
+                        <p className="text-[#1d1d30] text-lg leading-relaxed mb-8">
+                          "{item.content}"
+                        </p>
                       </div>
-                      <p className="text-[#1d1d30] text-lg leading-relaxed mb-8">
-                        "{item.content}"
-                      </p>
+                      <div className="flex items-center justify-between border-t border-gray-50 pt-6">
+                        <p className="text-gray-500 text-sm font-medium">{item.company_role}</p>
+                        <div className="w-8 h-4 bg-gray-100 rounded opacity-50"></div>
+                      </div>
                     </div>
-                    <div className="flex items-center justify-between border-t border-gray-50 pt-6">
-                      <p className="text-gray-500 text-sm font-medium">{item.company_role}</p>
-                      <div className="w-8 h-4 bg-gray-100 rounded opacity-50"></div>
-                    </div>
-                  </div>
-                ))}
-              </>
-            ) : null}
+                  ))}
+                </>
+              ) : null}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Super Section: Bento Grid (Dynamic Fintech Style) */}
       <section id="empresa" className="w-full bg-white py-24 md:py-40 lg:py-48">

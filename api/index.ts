@@ -221,7 +221,8 @@ async function initDB() {
         INSERT INTO app_settings (key, value) VALUES 
         ('webhook_url', 'https://n8n.hvjtech.com.br/webhook-test/tfaa_iniciaConversa'),
         ('head_scripts', ''),
-        ('body_scripts', '')
+        ('body_scripts', ''),
+        ('show_testimonials', 'true')
       `;
       console.log('Default settings seeded.');
     }

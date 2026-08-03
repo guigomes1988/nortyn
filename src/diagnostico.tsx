@@ -869,34 +869,7 @@ export default function Diagnostico() {
           </div>
         </section>
 
-        {/* INFINITE LOGO CAROUSEL */}
-        <section className="pt-16 pb-28 mb-24 md:mb-40 border-y border-white/5 overflow-hidden relative z-10">
-          <div className="container mx-auto px-6 mb-12 text-center">
-            <p className="text-gray-500 text-sm font-medium uppercase tracking-widest opacity-60">Empresas que confiam na Nortyn</p>
-          </div>
 
-          {/* Marquee Container */}
-          <div className="flex w-[200%] md:w-[150%] lg:w-[120%]">
-            <div className="flex w-1/2 justify-around items-center animate-marquee">
-              {/* Logos Set 1 */}
-              <Circle className="w-12 h-12 text-white/10 hover:text-white/30 transition-colors cursor-default" />
-              <Square className="w-12 h-12 text-white/10 hover:text-white/30 transition-colors cursor-default" />
-              <Triangle className="w-12 h-12 text-white/10 hover:text-white/30 transition-colors cursor-default" />
-              <Hexagon className="w-12 h-12 text-white/10 hover:text-white/30 transition-colors cursor-default" />
-              <Octagon className="w-12 h-12 text-white/10 hover:text-white/30 transition-colors cursor-default" />
-              <Box className="w-12 h-12 text-white/10 hover:text-white/30 transition-colors cursor-default" />
-            </div>
-            <div className="flex w-1/2 justify-around items-center animate-marquee">
-              {/* Logos Set 2 (Duplicate for infinite scroll) */}
-              <Circle className="w-12 h-12 text-white/10 hover:text-white/30 transition-colors cursor-default" />
-              <Square className="w-12 h-12 text-white/10 hover:text-white/30 transition-colors cursor-default" />
-              <Triangle className="w-12 h-12 text-white/10 hover:text-white/30 transition-colors cursor-default" />
-              <Hexagon className="w-12 h-12 text-white/10 hover:text-white/30 transition-colors cursor-default" />
-              <Octagon className="w-12 h-12 text-white/10 hover:text-white/30 transition-colors cursor-default" />
-              <Box className="w-12 h-12 text-white/10 hover:text-white/30 transition-colors cursor-default" />
-            </div>
-          </div>
-        </section>
 
         {/* FOOTER */}
         <footer className="container mx-auto px-4 md:px-6 pb-12 relative z-10">
