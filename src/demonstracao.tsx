@@ -36,7 +36,10 @@ export default function Demonstracao() {
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [testimonials, setTestimonials] = useState<any[]>([]);
-  const [socialLinks, setSocialLinks] = useState<any[]>([]);
+  const [socialLinks, setSocialLinks] = useState<any[]>([
+    { id: 1, platform: 'instagram', url: siteConfig.socialLinks.instagram, is_active: true },
+    { id: 2, platform: 'facebook', url: siteConfig.socialLinks.facebook, is_active: true },
+  ]);
   const [phone, setPhone] = useState('');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -300,10 +303,10 @@ export default function Demonstracao() {
               <div className="mt-auto border-t border-white/10 pt-8">
                 <p className="text-gray-400 text-sm mb-4">Redes Sociais e Contato</p>
                 <div className="flex items-center gap-6 mb-6">
-                  <a href={siteConfig.socialLinks.instagram} className="text-white/70 hover:text-[#00a99d]">
+                  <a href={siteConfig.socialLinks.instagram} target="_blank" rel="noopener noreferrer" className="text-white/70 hover:text-[#00a99d]">
                     <Instagram className="w-6 h-6" />
                   </a>
-                  <a href={siteConfig.socialLinks.facebook} className="text-white/70 hover:text-[#00a99d]">
+                  <a href={siteConfig.socialLinks.facebook} target="_blank" rel="noopener noreferrer" className="text-white/70 hover:text-[#00a99d]">
                     <Facebook className="w-6 h-6" />
                   </a>
                   <a href={siteConfig.socialLinks.linkedin} className="text-white/70 hover:text-[#00a99d]">

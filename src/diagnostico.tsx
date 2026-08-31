@@ -5,6 +5,8 @@ import BrandGlow from './components/BrandGlow';
 import BrandNetwork from './components/BrandNetwork';
 import EditableElement from './components/EditableElement';
 
+import { siteConfig } from './config/siteConfig';
+
 export default function Diagnostico() {
   const [phone, setPhone] = useState('');
   const [formData, setFormData] = useState({
@@ -16,7 +18,10 @@ export default function Diagnostico() {
     sector: ''
   });
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
-  const [socialLinks, setSocialLinks] = useState<any[]>([]);
+  const [socialLinks, setSocialLinks] = useState<any[]>([
+    { id: 1, platform: 'instagram', url: siteConfig.socialLinks.instagram, is_active: true },
+    { id: 2, platform: 'facebook', url: siteConfig.socialLinks.facebook, is_active: true },
+  ]);
   const [appSettings, setAppSettings] = useState<any>(null);
 
   const { scrollYProgress } = useScroll();

@@ -5,8 +5,8 @@ export const siteConfig = {
         email: "contato@nortyn.com.br",
     },
     socialLinks: {
-        instagram: "https://instagram.com/nortyn",
-        facebook: "https://facebook.com/nortyn",
+        instagram: "https://www.instagram.com/aguirratech",
+        facebook: "https://www.facebook.com/profile.php?id=61593805169076",
         linkedin: "https://linkedin.com/company/nortyn",
     },
     navigation: [

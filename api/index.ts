@@ -161,13 +161,24 @@ async function initDB() {
     if (existingSocials.length === 0) {
       await sql`
         INSERT INTO social_links (platform, url, is_active) VALUES 
-        ('facebook', 'https://facebook.com', false),
-        ('instagram', 'https://instagram.com/nortyn', true),
-        ('linkedin', 'https://linkedin.com/company/nortyn', true),
+        ('facebook', 'https://www.facebook.com/profile.php?id=61593805169076', true),
+        ('instagram', 'https://www.instagram.com/aguirratech', true),
+        ('linkedin', 'https://linkedin.com/company/nortyn', false),
         ('youtube', 'https://youtube.com', false),
         ('tiktok', 'https://tiktok.com', false)
       `;
       console.log('Default social links seeded.');
+    } else {
+      await sql`
+        UPDATE social_links 
+        SET url = 'https://www.instagram.com/aguirratech', is_active = true 
+        WHERE platform = 'instagram'
+      `;
+      await sql`
+        UPDATE social_links 
+        SET url = 'https://www.facebook.com/profile.php?id=61593805169076', is_active = true 
+        WHERE platform = 'facebook'
+      `;
     }
 
     // Gallery table
