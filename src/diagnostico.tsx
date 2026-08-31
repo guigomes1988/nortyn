@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowRight, Menu, Image as ImageIcon, MoreVertical, ArrowUpRight, FileSpreadsheet, EyeOff, Target, Brain, TrendingDown, Users, ChevronDown, Check, Info, Aperture, Circle, Square, Triangle, Hexagon, Octagon, Box, Linkedin, Instagram, Facebook, Youtube, Music, Mail, Phone, MapPin, ArrowUp, Activity, Zap } from 'lucide-react';
+import { ArrowRight, Menu, Image as ImageIcon, MoreVertical, ArrowUpRight, FileSpreadsheet, EyeOff, Target, Brain, TrendingDown, Users, ChevronDown, Check, Info, Aperture, Circle, Square, Triangle, Hexagon, Octagon, Box, Linkedin, Instagram, Facebook, Youtube, Music, Mail, Phone, MapPin, ArrowUp, Activity, Zap, Globe } from 'lucide-react';
 import { motion, useScroll, useTransform } from 'motion/react';
 import BrandGlow from './components/BrandGlow';
 import BrandNetwork from './components/BrandNetwork';
@@ -95,7 +95,7 @@ export default function Diagnostico() {
       case 'linkedin': return <Linkedin className="w-5 h-5" />;
       case 'youtube': return <Youtube className="w-5 h-5" />;
       case 'tiktok': return <Music className="w-5 h-5" />;
-      default: return null;
+      default: return <Globe className="w-5 h-5" />;
     }
   };
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Rocket, LineChart, Target, Check, ArrowUpRight, Database, Eye, Send, Lightbulb, ClipboardList, Search, TrendingUp, Instagram, Facebook, Linkedin, Youtube, Music, Menu, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Rocket, LineChart, Target, Check, ArrowUpRight, Database, Eye, Send, Lightbulb, ClipboardList, Search, TrendingUp, Instagram, Facebook, Linkedin, Youtube, Music, Menu, X, ChevronLeft, ChevronRight, Globe } from 'lucide-react';
 import { motion } from 'motion/react';
 import BrandGlow from './components/BrandGlow';
 import { siteConfig } from './config/siteConfig';
@@ -178,7 +178,7 @@ export default function Demonstracao() {
       case 'linkedin': return <Linkedin className="w-6 h-6" />;
       case 'youtube': return <Youtube className="w-6 h-6" />;
       case 'tiktok': return <Music className="w-6 h-6" />; // Music icon as a fallback for TikTok
-      default: return null;
+      default: return <Globe className="w-6 h-6" />;
     }
   };
 
@@ -303,15 +303,17 @@ export default function Demonstracao() {
               <div className="mt-auto border-t border-white/10 pt-8">
                 <p className="text-gray-400 text-sm mb-4">Redes Sociais e Contato</p>
                 <div className="flex items-center gap-6 mb-6">
-                  <a href={siteConfig.socialLinks.instagram} target="_blank" rel="noopener noreferrer" className="text-white/70 hover:text-[#00a99d]">
-                    <Instagram className="w-6 h-6" />
-                  </a>
-                  <a href={siteConfig.socialLinks.facebook} target="_blank" rel="noopener noreferrer" className="text-white/70 hover:text-[#00a99d]">
-                    <Facebook className="w-6 h-6" />
-                  </a>
-                  <a href={siteConfig.socialLinks.linkedin} className="text-white/70 hover:text-[#00a99d]">
-                    <Linkedin className="w-6 h-6" />
-                  </a>
+                  {socialLinks.filter(link => link.is_active).map(link => (
+                    <a
+                      key={link.id}
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-white/70 hover:text-[#00a99d] transition-colors"
+                    >
+                      {getSocialIcon(link.platform)}
+                    </a>
+                  ))}
                 </div>
                 <p className="text-white/60 text-sm">{siteConfig.contact.email}</p>
               </div>

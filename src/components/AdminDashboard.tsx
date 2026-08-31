@@ -5,11 +5,11 @@ import {
   Loader2, LogOut, User as UserIcon, Lock, CheckCircle2, 
   ChevronRight, ExternalLink, Settings, Home, FileText, MessageSquare, Plus, Trash2, Edit2, X,
   Image as ImageIcon, Code, Users as UsersIcon, Globe, Link as LinkIcon, Upload,
-  Eye, EyeOff
+  Eye, EyeOff, Instagram, Facebook, Linkedin, Youtube, Music, Save, Share2
 } from 'lucide-react';
 import BrandGlow from './BrandGlow';
 
-type Tab = 'testimonials' | 'gallery' | 'settings' | 'users';
+type Tab = 'testimonials' | 'gallery' | 'socials' | 'settings' | 'users';
 
 interface SocialLink {
   id: number;
@@ -61,6 +61,9 @@ export default function AdminDashboard() {
   // Social Links State
   const [socialLinks, setSocialLinks] = useState<SocialLink[]>([]);
   const [isSocialsLoading, setIsSocialsLoading] = useState(false);
+  const [newSocial, setNewSocial] = useState({ platform: '', url: '', is_active: true });
+  const [isAddingSocial, setIsAddingSocial] = useState(false);
+  const [savingSocialId, setSavingSocialId] = useState<number | null>(null);
 
   // Gallery State
   const [galleryImages, setGalleryImages] = useState<GalleryImage[]>([]);
@@ -91,11 +94,135 @@ export default function AdminDashboard() {
       fetchAppSettings();
     }
     if (activeTab === 'gallery') fetchGallery();
+    if (activeTab === 'socials') fetchSocialLinks();
     if (activeTab === 'settings') {
       fetchAppSettings();
     }
     if (activeTab === 'users') fetchAdminUsers();
   }, [activeTab]);
+
+  const fetchSocialLinks = async () => {
+    setIsSocialsLoading(true);
+    try {
+      const response = await fetch('/api/social-links');
+      if (response.ok) {
+        const data = await response.json();
+        setSocialLinks(data);
+      }
+    } catch (err) {
+      console.error('Error fetching social links:', err);
+    } finally {
+      setIsSocialsLoading(false);
+    }
+  };
+
+  const handleToggleSocial = async (link: SocialLink) => {
+    try {
+      const updatedStatus = !link.is_active;
+      setSocialLinks(prev => prev.map(s => s.id === link.id ? { ...s, is_active: updatedStatus } : s));
+
+      const response = await fetch(`/api/social-links/${link.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ url: link.url, is_active: updatedStatus })
+      });
+
+      if (!response.ok) {
+        setSocialLinks(prev => prev.map(s => s.id === link.id ? { ...s, is_active: link.is_active } : s));
+        setMessage({ text: 'Erro ao atualizar rede social.', type: 'error' });
+      }
+    } catch (err) {
+      setMessage({ text: 'Erro de conexão.', type: 'error' });
+    }
+  };
+
+  const handleSaveSocialUrl = async (link: SocialLink) => {
+    setSavingSocialId(link.id);
+    try {
+      const response = await fetch(`/api/social-links/${link.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ url: link.url, is_active: link.is_active })
+      });
+
+      if (response.ok) {
+        setMessage({ text: 'Link atualizado com sucesso!', type: 'success' });
+      } else {
+        setMessage({ text: 'Erro ao salvar link.', type: 'error' });
+      }
+    } catch (err) {
+      setMessage({ text: 'Erro de conexão.', type: 'error' });
+    } finally {
+      setSavingSocialId(null);
+    }
+  };
+
+  const handleCreateSocialLink = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newSocial.platform || !newSocial.url) return;
+
+    try {
+      const response = await fetch('/api/social-links', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(newSocial)
+      });
+
+      if (response.ok) {
+        const created = await response.json();
+        setSocialLinks(prev => [...prev, created]);
+        setNewSocial({ platform: '', url: '', is_active: true });
+        setIsAddingSocial(false);
+        setMessage({ text: 'Rede social adicionada com sucesso!', type: 'success' });
+      } else {
+        setMessage({ text: 'Erro ao adicionar rede social.', type: 'error' });
+      }
+    } catch (err) {
+      setMessage({ text: 'Erro de conexão.', type: 'error' });
+    }
+  };
+
+  const handleDeleteSocialLink = async (id: number) => {
+    if (!window.confirm('Tem certeza que deseja remover esta rede social?')) return;
+
+    try {
+      const response = await fetch(`/api/social-links/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        setSocialLinks(prev => prev.filter(s => s.id !== id));
+        setMessage({ text: 'Rede social removida!', type: 'success' });
+      } else {
+        setMessage({ text: 'Erro ao remover rede social.', type: 'error' });
+      }
+    } catch (err) {
+      setMessage({ text: 'Erro de conexão.', type: 'error' });
+    }
+  };
+
+  const getSocialIcon = (platform: string) => {
+    switch (platform.toLowerCase()) {
+      case 'facebook': return <Facebook className="w-5 h-5" />;
+      case 'instagram': return <Instagram className="w-5 h-5" />;
+      case 'linkedin': return <Linkedin className="w-5 h-5" />;
+      case 'youtube': return <Youtube className="w-5 h-5" />;
+      case 'tiktok': return <Music className="w-5 h-5" />;
+      default: return <Globe className="w-5 h-5" />;
+    }
+  };
 
   const fetchTestimonials = async () => {
     setIsTestimonialsLoading(true);
@@ -453,6 +580,13 @@ export default function AdminDashboard() {
             <span className="font-medium">Galeria</span>
           </button>
           <button 
+            onClick={() => setActiveTab('socials')}
+            className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === 'socials' ? 'bg-nortyn-secondary text-white shadow-lg shadow-nortyn-secondary/20' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+          >
+            <Share2 className="w-5 h-5" />
+            <span className="font-medium">Redes Sociais</span>
+          </button>
+          <button 
             onClick={() => setActiveTab('settings')}
             className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === 'settings' ? 'bg-nortyn-secondary text-white shadow-lg shadow-nortyn-secondary/20' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
           >
@@ -493,10 +627,10 @@ export default function AdminDashboard() {
         <header className="px-8 py-6 border-b border-white/5 flex items-center justify-between sticky top-0 bg-[#060515]/60 backdrop-blur-md z-30">
           <div>
             <h1 className="text-2xl font-bold">
-              {activeTab === 'testimonials' ? 'Depoimentos' : activeTab === 'gallery' ? 'Galeria Slideshow' : activeTab === 'users' ? 'Gestão de Usuários' : 'Configurações'}
+              {activeTab === 'testimonials' ? 'Depoimentos' : activeTab === 'gallery' ? 'Galeria Slideshow' : activeTab === 'socials' ? 'Redes Sociais' : activeTab === 'users' ? 'Gestão de Usuários' : 'Configurações'}
             </h1>
             <p className="text-sm text-gray-400">
-              {activeTab === 'testimonials' ? 'Gerencie os depoimentos dos clientes.' : activeTab === 'gallery' ? 'Adicione imagens para o carrossel da página.' : activeTab === 'users' ? 'Administre os usuários do painel.' : 'Gerencie configurações, perfil e integrações.'}
+              {activeTab === 'testimonials' ? 'Gerencie os depoimentos dos clientes.' : activeTab === 'gallery' ? 'Adicione imagens para o carrossel da página.' : activeTab === 'socials' ? 'Ative/desative redes sociais e edite os links das páginas Nortyn e Diagnóstico.' : activeTab === 'users' ? 'Administre os usuários do painel.' : 'Gerencie configurações, perfil e integrações.'}
             </p>
           </div>
           {activeTab === 'testimonials' && (
@@ -643,6 +777,177 @@ export default function AdminDashboard() {
                           className="p-3 bg-red-500 rounded-full text-white hover:bg-red-600 transition-all transform translate-y-4 group-hover:translate-y-0"
                         >
                           <Trash2 className="w-5 h-5" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {activeTab === 'socials' && (
+            <div className="space-y-8">
+              {/* Header & Add Button */}
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-[#0B091E]/60 border border-white/10 rounded-3xl p-6 backdrop-blur-sm">
+                <div>
+                  <h3 className="text-xl font-bold flex items-center gap-2">
+                    <Globe className="w-5 h-5 text-nortyn-secondary" />
+                    Gerenciar Redes Sociais
+                  </h3>
+                  <p className="text-sm text-gray-400 mt-1">
+                    Ative ou desative as redes sociais e edite as URLs correspondentes. Todos os links serão abertos em nova guia (<code className="text-xs bg-white/10 px-1.5 py-0.5 rounded text-nortyn-secondary">target="_blank"</code>) nos rodapés e menus das páginas Nortyn e Diagnóstico.
+                  </p>
+                </div>
+
+                <button
+                  onClick={() => setIsAddingSocial(true)}
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-nortyn-secondary hover:bg-nortyn-secondary/80 text-white font-medium transition-all shadow-lg shadow-nortyn-secondary/20 shrink-0"
+                >
+                  <Plus className="w-4 h-4" />
+                  Nova Rede Social
+                </button>
+              </div>
+
+              {/* Modal for adding new social */}
+              {isAddingSocial && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+                  <div className="bg-[#0B091E] border border-white/10 rounded-3xl p-6 max-w-md w-full shadow-2xl">
+                    <div className="flex justify-between items-center mb-6">
+                      <h4 className="text-lg font-bold">Adicionar Nova Rede Social</h4>
+                      <button onClick={() => setIsAddingSocial(false)} className="text-gray-400 hover:text-white">
+                        <X className="w-5 h-5" />
+                      </button>
+                    </div>
+
+                    <form onSubmit={handleCreateSocialLink} className="space-y-4">
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-400 uppercase mb-2">Plataforma</label>
+                        <input
+                          type="text"
+                          placeholder="Ex: instagram, facebook, whatsapp, linkedin..."
+                          value={newSocial.platform}
+                          onChange={(e) => setNewSocial({ ...newSocial, platform: e.target.value })}
+                          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-nortyn-secondary"
+                          required
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-semibold text-gray-400 uppercase mb-2">URL / Link</label>
+                        <input
+                          type="url"
+                          placeholder="https://..."
+                          value={newSocial.url}
+                          onChange={(e) => setNewSocial({ ...newSocial, url: e.target.value })}
+                          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-nortyn-secondary"
+                          required
+                        />
+                      </div>
+
+                      <div className="flex items-center justify-between pt-2">
+                        <span className="text-sm font-medium">Habilitar no Site</span>
+                        <button
+                          type="button"
+                          onClick={() => setNewSocial({ ...newSocial, is_active: !newSocial.is_active })}
+                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${newSocial.is_active ? 'bg-nortyn-secondary' : 'bg-gray-700'}`}
+                        >
+                          <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${newSocial.is_active ? 'translate-x-6' : 'translate-x-1'}`} />
+                        </button>
+                      </div>
+
+                      <div className="flex justify-end gap-3 pt-4 border-t border-white/10">
+                        <button
+                          type="button"
+                          onClick={() => setIsAddingSocial(false)}
+                          className="px-4 py-2 rounded-xl text-gray-400 hover:text-white hover:bg-white/5 text-sm"
+                        >
+                          Cancelar
+                        </button>
+                        <button
+                          type="submit"
+                          className="px-5 py-2 rounded-xl bg-nortyn-secondary text-white font-medium text-sm hover:bg-nortyn-secondary/80"
+                        >
+                          Adicionar
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+              )}
+
+              {/* List of Social Links */}
+              {isSocialsLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="w-8 h-8 animate-spin text-nortyn-secondary" />
+                </div>
+              ) : socialLinks.length === 0 ? (
+                <div className="text-center py-12 bg-[#0B091E]/60 border border-white/10 rounded-3xl">
+                  <p className="text-gray-400">Nenhuma rede social cadastrada.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-4">
+                  {socialLinks.map((link) => (
+                    <div
+                      key={link.id}
+                      className="bg-[#0B091E]/60 border border-white/10 rounded-2xl p-5 backdrop-blur-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4"
+                    >
+                      <div className="flex items-center gap-3 w-full md:w-48 shrink-0">
+                        <div className={`p-3 rounded-xl ${link.is_active ? 'bg-nortyn-secondary/20 text-nortyn-secondary' : 'bg-white/5 text-gray-500'}`}>
+                          {getSocialIcon(link.platform)}
+                        </div>
+                        <div>
+                          <h4 className="font-bold text-white capitalize">{link.platform}</h4>
+                          <span className={`text-[10px] uppercase font-semibold px-2 py-0.5 rounded-full ${link.is_active ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'}`}>
+                            {link.is_active ? 'Ativo' : 'Inativo'}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* URL Input */}
+                      <div className="flex-1 w-full flex items-center gap-2">
+                        <input
+                          type="url"
+                          value={link.url}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setSocialLinks(prev => prev.map(s => s.id === link.id ? { ...s, url: val } : s));
+                          }}
+                          placeholder="https://..."
+                          className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-nortyn-secondary"
+                        />
+                        <button
+                          onClick={() => handleSaveSocialUrl(link)}
+                          disabled={savingSocialId === link.id}
+                          className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-medium transition-all shrink-0"
+                          title="Salvar URL"
+                        >
+                          {savingSocialId === link.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                          <span className="hidden sm:inline">Salvar</span>
+                        </button>
+                      </div>
+
+                      {/* Actions: Toggle & Delete */}
+                      <div className="flex items-center gap-4 shrink-0 self-end md:self-center">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-gray-400 hidden sm:inline">
+                            {link.is_active ? 'Habilitado' : 'Desabilitado'}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleToggleSocial(link)}
+                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${link.is_active ? 'bg-nortyn-secondary' : 'bg-gray-700'}`}
+                          >
+                            <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${link.is_active ? 'translate-x-6' : 'translate-x-1'}`} />
+                          </button>
+                        </div>
+
+                        <button
+                          onClick={() => handleDeleteSocialLink(link.id)}
+                          className="p-2 rounded-xl text-gray-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
+                          title="Excluir"
+                        >
+                          <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
                     </div>

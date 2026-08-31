@@ -490,6 +490,44 @@ app.put('/api/social-links/:id', authenticateToken, async (req, res) => {
   }
 });
 
+// Create social link (Protected)
+app.post('/api/social-links', authenticateToken, async (req, res) => {
+  const { platform, url, is_active } = req.body;
+
+  if (!platform || !url) {
+    return res.status(400).json({ error: 'Platform and URL are required' });
+  }
+
+  try {
+    const result = await sql`
+      INSERT INTO social_links (platform, url, is_active)
+      VALUES (${platform.toLowerCase()}, ${url}, ${is_active ?? true})
+      RETURNING *
+    `;
+
+    res.json(result[0]);
+  } catch (error) {
+    console.error('Error creating social link:', error);
+    res.status(500).json({ error: 'Failed to create social link' });
+  }
+});
+
+// Delete social link (Protected)
+app.delete('/api/social-links/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const result = await sql`DELETE FROM social_links WHERE id = ${id} RETURNING *`;
+    if (result.length === 0) {
+      return res.status(404).json({ error: 'Social link not found' });
+    }
+    res.json({ message: 'Social link deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting social link:', error);
+    res.status(500).json({ error: 'Failed to delete social link' });
+  }
+});
+
 // --- GALLERY ENDPOINTS ---
 app.get('/api/gallery', async (req, res) => {
   try {
