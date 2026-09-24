@@ -4,6 +4,7 @@ import { motion } from 'motion/react';
 import BrandGlow from './components/BrandGlow';
 import { siteConfig } from './config/siteConfig';
 import EditableElement from './components/EditableElement';
+import { submitLead } from './services/crmService';
 
 const fadeInUp = {
   initial: { opacity: 0, y: 40 },
@@ -34,6 +35,7 @@ const staggerItem = {
 
 export default function Demonstracao() {
   const [formSubmitted, setFormSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [testimonials, setTestimonials] = useState<any[]>([]);
   const [socialLinks, setSocialLinks] = useState<any[]>([
@@ -184,34 +186,51 @@ export default function Demonstracao() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    if (!phone || phone.replace(/\D/g, '').length < 10) {
+      alert('Por favor, informe um telefone ou WhatsApp válido com DDD.');
+      return;
+    }
+
+    setIsSubmitting(true);
     const formData = new FormData(e.currentTarget);
-    const data = {
-      fullName: formData.get('fullName'),
-      email: formData.get('email'),
-      company: formData.get('company'),
-      role: formData.get('role'),
-      phone: phone,
-      source: "Demonstração",
-    };
+    const fullName = (formData.get('fullName') as string) || '';
+    const email = (formData.get('email') as string) || '';
+    const company = (formData.get('company') as string) || '';
+    const role = (formData.get('role') as string) || '';
 
     try {
-      const webhookUrl = appSettings?.webhook_url || 'https://n8n.hvjtech.com.br/webhook-test/tfaa_iniciaConversa';
-      const response = await fetch(webhookUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
+      await submitLead({
+        nome: fullName,
+        email: email,
+        fone: phone,
+        empresa: company,
+        cargo: role,
+        origem: 'institucional',
       });
 
-      if (response.ok) {
-        setFormSubmitted(true);
-      } else {
-        alert('Erro ao enviar o formulário. Por favor, tente novamente.');
+      // Se houver webhook secundário configurado pelo admin (e não for o teste antigo), dispara em background
+      if (appSettings?.webhook_url && !appSettings.webhook_url.includes('webhook-test')) {
+        fetch(appSettings.webhook_url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            nome: fullName,
+            email,
+            fone: phone,
+            empresa: company,
+            cargo: role,
+            origem: 'institucional',
+          }),
+        }).catch(() => {});
       }
-    } catch (error) {
+
+      setFormSubmitted(true);
+    } catch (error: any) {
       console.error('Erro ao enviar lead:', error);
-      alert('Não foi possível conectar ao servidor. Verifique se o backend está rodando.');
+      alert(error?.message || 'Erro ao enviar o formulário. Por favor, tente novamente.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -991,9 +1010,10 @@ export default function Demonstracao() {
                 {/* Submit Button */}
                 <button
                   type="submit"
-                  className="col-span-full w-full mt-4 bg-[#009a93] text-white font-semibold text-lg rounded-lg py-4 transition-all duration-300 hover:scale-[1.03] hover:bg-[#00807a]"
+                  disabled={isSubmitting}
+                  className="col-span-full w-full mt-4 bg-[#009a93] text-white font-semibold text-lg rounded-lg py-4 transition-all duration-300 hover:scale-[1.03] hover:bg-[#00807a] disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  {siteConfig.form.buttonText}
+                  {isSubmitting ? 'Enviando...' : siteConfig.form.buttonText}
                 </button>
               </form>
             )}

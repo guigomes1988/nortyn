@@ -4,6 +4,7 @@ import { motion, useScroll, useTransform } from 'motion/react';
 import BrandGlow from './components/BrandGlow';
 import BrandNetwork from './components/BrandNetwork';
 import EditableElement from './components/EditableElement';
+import { submitLead } from './services/crmService';
 
 import { siteConfig } from './config/siteConfig';
 
@@ -18,6 +19,7 @@ export default function Diagnostico() {
     sector: ''
   });
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [errorMessage, setErrorMessage] = useState('');
   const [socialLinks, setSocialLinks] = useState<any[]>([
     { id: 1, platform: 'instagram', url: siteConfig.socialLinks.instagram, is_active: true },
     { id: 2, platform: 'facebook', url: siteConfig.socialLinks.facebook, is_active: true },
@@ -127,35 +129,52 @@ export default function Diagnostico() {
     if (e) e.preventDefault();
 
     if (!formData.name || !formData.email) {
-      alert('Por favor, preencha nome e e-mail.');
+      alert('Por favor, preencha seu nome e e-mail corporativo.');
+      return;
+    }
+
+    if (!phone || phone.replace(/\D/g, '').length < 10) {
+      alert('Por favor, informe um telefone ou WhatsApp válido com DDD.');
       return;
     }
 
     setStatus('loading');
+    setErrorMessage('');
 
     try {
-      const webhookUrl = appSettings?.webhook_url || 'https://n8n.hvjtech.com.br/webhook-test/tfaa_iniciaConversa';
-      const response = await fetch(webhookUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...formData,
-          phone,
-          source: "Diagnóstico"
-        }),
+      await submitLead({
+        nome: formData.name,
+        email: formData.email,
+        fone: phone,
+        empresa: formData.company,
+        cargo: formData.role,
+        setor: formData.sector,
+        equipeVenda: formData.revenue,
+        origem: 'diagnostico',
       });
 
-      if (response.ok) {
-        setStatus('success');
-        setFormData({ name: '', email: '', company: '', role: '', revenue: '', sector: '' });
-        setPhone('');
-      } else {
-        setStatus('error');
+      // Se houver webhook secundário configurado pelo admin (e não for o teste antigo), dispara em background
+      if (appSettings?.webhook_url && !appSettings.webhook_url.includes('webhook-test')) {
+        fetch(appSettings.webhook_url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            ...formData,
+            phone,
+            source: 'Diagnóstico',
+            origem: 'diagnostico',
+          }),
+        }).catch(() => {});
       }
-    } catch (error) {
+
+      setStatus('success');
+      setFormData({ name: '', email: '', company: '', role: '', revenue: '', sector: '' });
+      setPhone('');
+    } catch (error: any) {
       console.error('Error submitting form:', error);
+      setErrorMessage(error?.message || 'Erro ao enviar. Tente novamente ou use o WhatsApp.');
       setStatus('error');
     }
   };
@@ -787,11 +806,11 @@ export default function Diagnostico() {
                         className="w-full bg-white/10 backdrop-blur-md border border-white/20 text-white rounded-xl px-4 py-3 appearance-none focus:outline-none focus:ring-2 focus:ring-[#009a93]/50 focus:border-[#009a93] transition-all"
                       >
                         <option value="" disabled className="text-slate-900">Selecione</option>
-                        <option value="diretor" className="text-slate-900">Diretor(a)</option>
-                        <option value="gerente" className="text-slate-900">Gerente</option>
-                        <option value="coordenador" className="text-slate-900">Coordenador(a)</option>
-                        <option value="analista" className="text-slate-900">Analista</option>
-                        <option value="outro" className="text-slate-900">Outro</option>
+                        <option value="Diretor(a)" className="text-slate-900">Diretor(a)</option>
+                        <option value="Gerente" className="text-slate-900">Gerente</option>
+                        <option value="Coordenador(a)" className="text-slate-900">Coordenador(a)</option>
+                        <option value="Analista" className="text-slate-900">Analista</option>
+                        <option value="Outro" className="text-slate-900">Outro</option>
                       </select>
                       <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-400">
                         <ChevronDown className="w-4 h-4" />
@@ -810,11 +829,11 @@ export default function Diagnostico() {
                         className="w-full bg-white/10 backdrop-blur-md border border-white/20 text-white rounded-xl px-4 py-3 appearance-none focus:outline-none focus:ring-2 focus:ring-[#009a93]/50 focus:border-[#009a93] transition-all"
                       >
                         <option value="" disabled className="text-slate-900">Selecione</option>
-                        <option value="industria" className="text-slate-900">Indústria</option>
-                        <option value="varejo" className="text-slate-900">Varejo</option>
-                        <option value="servicos" className="text-slate-900">Serviços</option>
-                        <option value="tecnologia" className="text-slate-900">Tecnologia</option>
-                        <option value="outro" className="text-slate-900">Outro</option>
+                        <option value="Indústria" className="text-slate-900">Indústria</option>
+                        <option value="Varejo" className="text-slate-900">Varejo</option>
+                        <option value="Serviços" className="text-slate-900">Serviços</option>
+                        <option value="Tecnologia" className="text-slate-900">Tecnologia</option>
+                        <option value="Outro" className="text-slate-900">Outro</option>
                       </select>
                       <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-400">
                         <ChevronDown className="w-4 h-4" />
@@ -861,7 +880,7 @@ export default function Diagnostico() {
 
                   {status === 'error' && (
                     <p className="mt-4 text-red-400 font-medium">
-                      Erro ao enviar. Tente novamente ou use o WhatsApp.
+                      {errorMessage || 'Erro ao enviar. Tente novamente ou use o WhatsApp.'}
                     </p>
                   )}
 

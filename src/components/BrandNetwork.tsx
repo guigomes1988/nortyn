@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
-import { SVGLoader } from 'three/examples/jsm/loaders/SVGLoader';
+import { SVGLoader } from 'three/examples/jsm/loaders/SVGLoader.js';
 import { FileMinus, BrainCircuit, Zap, Target } from 'lucide-react';
 
 const BrandNetwork: React.FC = () => {

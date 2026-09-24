@@ -230,7 +230,7 @@ async function initDB() {
     if (existingSettings.length === 0) {
       await sql`
         INSERT INTO app_settings (key, value) VALUES 
-        ('webhook_url', 'https://n8n.hvjtech.com.br/webhook-test/tfaa_iniciaConversa'),
+        ('webhook_url', 'https://api.aguirratech.com/crm/v1/lead/incluir'),
         ('head_scripts', ''),
         ('body_scripts', ''),
         ('show_testimonials', 'true')
