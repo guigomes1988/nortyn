@@ -5,6 +5,7 @@ import BrandGlow from './components/BrandGlow';
 import BrandNetwork from './components/BrandNetwork';
 import EditableElement from './components/EditableElement';
 import { submitLead } from './services/crmService';
+import { trackLead } from './services/analytics';
 
 import { siteConfig } from './config/siteConfig';
 
@@ -151,6 +152,13 @@ export default function Diagnostico() {
         setor: formData.sector,
         equipeVenda: formData.revenue,
         origem: 'diagnostico',
+      });
+
+      // Dispara evento oficial de conversão no Meta Pixel e dataLayer
+      trackLead({
+        content_name: 'Diagnóstico Nortyn',
+        origem: 'diagnostico',
+        setor: formData.sector,
       });
 
       // Se houver webhook secundário configurado pelo admin (e não for o teste antigo), dispara em background

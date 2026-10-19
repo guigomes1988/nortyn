@@ -5,6 +5,7 @@ import BrandGlow from './components/BrandGlow';
 import { siteConfig } from './config/siteConfig';
 import EditableElement from './components/EditableElement';
 import { submitLead } from './services/crmService';
+import { trackLead } from './services/analytics';
 
 const fadeInUp = {
   initial: { opacity: 0, y: 40 },
@@ -206,6 +207,12 @@ export default function Demonstracao() {
         fone: phone,
         empresa: company,
         cargo: role,
+        origem: 'institucional',
+      });
+
+      // Dispara evento oficial de conversão no Meta Pixel e dataLayer
+      trackLead({
+        content_name: 'Demonstração Nortyn',
         origem: 'institucional',
       });
 
