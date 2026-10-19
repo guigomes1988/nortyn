@@ -16,32 +16,30 @@ dotenv.config();
 
 const app = express();
 
-// Ensure uploads directory exists
-const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
-if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir, { recursive: true });
+// Safe uploads directory initialization (fallback for local dev)
+try {
+  const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
+  if (!fs.existsSync(uploadsDir)) {
+    fs.mkdirSync(uploadsDir, { recursive: true });
+  }
+} catch (e) {
+  // Ignored in read-only serverless environments like Vercel
 }
 
-// Multer configuration
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, uploadsDir);
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
-  }
-});
+// Multer configuration (in-memory for serverless & local compatibility)
+const storage = multer.memoryStorage();
 
 const upload = multer({ 
   storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
   fileFilter: (req, file, cb) => {
-    const allowedTypes = /jpeg|jpg|png|webp/;
-    const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
-    const mimetype = allowedTypes.test(file.mimetype);
-    if (extname && mimetype) return cb(null, true);
-    cb(new Error('Only images (jpg, png, webp) are allowed'));
+    const allowedExts = /\.(jpe?g|png|webp)$/i;
+    const isExtAllowed = allowedExts.test(file.originalname);
+    const isMimeAllowed = /^image\/(jpeg|png|webp)$/i.test(file.mimetype);
+    if (isExtAllowed || isMimeAllowed) {
+      return cb(null, true);
+    }
+    cb(new Error('Apenas imagens (JPG, PNG, WebP) são permitidas'));
   }
 });
 const port = process.env.PORT || 3001;
@@ -52,7 +50,8 @@ if (!JWT_SECRET) {
 }
 
 app.use(cors());
-app.use(express.json());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 // Vercel serverless functions strip the /api prefix from the URL.
 // We prepend it back so that Express routes match correctly.
@@ -531,7 +530,7 @@ app.delete('/api/social-links/:id', authenticateToken, async (req, res) => {
 // --- GALLERY ENDPOINTS ---
 app.get('/api/gallery', async (req, res) => {
   try {
-    const images = await sql`SELECT * FROM gallery_images ORDER BY display_order ASC, id DESC`;
+    const images = await sql`SELECT * FROM gallery_images ORDER BY display_order ASC, id ASC`;
     res.json(images);
   } catch (error) {
     res.status(500).json({ error: 'Failed to fetch gallery images' });
@@ -540,10 +539,18 @@ app.get('/api/gallery', async (req, res) => {
 
 app.post('/api/gallery', authenticateToken, async (req, res) => {
   const { url, alt, display_order } = req.body;
+  if (!url) {
+    return res.status(400).json({ error: 'URL da imagem é obrigatória' });
+  }
   try {
+    let order = display_order;
+    if (order === undefined || order === null) {
+      const orderResult = await sql`SELECT COALESCE(MAX(display_order), 0) + 1 AS next_order FROM gallery_images`;
+      order = orderResult[0]?.next_order ?? 0;
+    }
     const result = await sql`
       INSERT INTO gallery_images (url, alt, display_order)
-      VALUES (${url}, ${alt || ''}, ${display_order || 0})
+      VALUES (${url}, ${alt || ''}, ${order})
       RETURNING *
     `;
     res.status(201).json(result[0]);
@@ -552,24 +559,60 @@ app.post('/api/gallery', authenticateToken, async (req, res) => {
   }
 });
 
-app.post('/api/gallery/upload', authenticateToken, upload.single('image'), async (req: any, res: any) => {
-  if (!req.file) {
-    return res.status(400).json({ error: 'No image file uploaded' });
+// Reordenar imagens da galeria (arrastar e soltar)
+app.put('/api/gallery/reorder', authenticateToken, async (req: any, res: any) => {
+  const { order } = req.body;
+  if (!Array.isArray(order)) {
+    return res.status(400).json({ error: 'Formato inválido. Esperado array com a nova ordem.' });
   }
 
-  const imageUrl = `/uploads/${req.file.filename}`;
-  const alt = req.body.alt || '';
+  try {
+    const updates = order.map((item: any, index: number) => {
+      const id = typeof item === 'object' ? item.id : item;
+      const display_order = typeof item === 'object' && item.display_order !== undefined ? item.display_order : index + 1;
+      return sql`UPDATE gallery_images SET display_order = ${display_order} WHERE id = ${id}`;
+    });
+
+    await Promise.all(updates);
+    res.json({ message: 'Ordem atualizada com sucesso' });
+  } catch (error: any) {
+    console.error('Error reordering gallery images:', error);
+    res.status(500).json({ error: error.message || 'Falha ao reordenar imagens' });
+  }
+});
+
+app.post('/api/gallery/upload', authenticateToken, (req: any, res: any, next: any) => {
+  upload.single('image')(req, res, (err: any) => {
+    if (err) {
+      console.error('Multer upload error:', err);
+      return res.status(400).json({ error: err.message || 'Erro ao processar imagem' });
+    }
+    next();
+  });
+}, async (req: any, res: any) => {
+  if (!req.file) {
+    return res.status(400).json({ error: 'Nenhuma imagem foi enviada' });
+  }
 
   try {
+    // Armazena a imagem como Data URL em Base64 (compatível com Vercel Serverless / Neon DB)
+    const base64 = req.file.buffer.toString('base64');
+    const mimeType = req.file.mimetype || 'image/jpeg';
+    const imageUrl = `data:${mimeType};base64,${base64}`;
+    const alt = req.body.alt || req.file.originalname || 'Slideshow Image';
+
+    const orderResult = await sql`SELECT COALESCE(MAX(display_order), 0) + 1 AS next_order FROM gallery_images`;
+    const nextOrder = orderResult[0]?.next_order ?? 0;
+
     const result = await sql`
       INSERT INTO gallery_images (url, alt, display_order)
-      VALUES (${imageUrl}, ${alt}, 0)
+      VALUES (${imageUrl}, ${alt}, ${nextOrder})
       RETURNING *
     `;
     res.status(201).json(result[0]);
-  } catch (error) {
+  } catch (error: any) {
     console.error('Database error after upload:', error);
-    res.status(500).json({ error: 'Failed to save image reference' });
+    res.status(500).json({ error: error.message || 'Falha ao salvar a imagem no banco de dados' });
   }
 });
 

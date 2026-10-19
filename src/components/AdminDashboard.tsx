@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAdmin } from './AdminContext';
 import { 
   Loader2, LogOut, User as UserIcon, Lock, CheckCircle2, 
-  ChevronRight, ExternalLink, Settings, Home, FileText, MessageSquare, Plus, Trash2, Edit2, X,
+  ChevronRight, ChevronLeft, GripVertical, ExternalLink, Settings, Home, FileText, MessageSquare, Plus, Trash2, Edit2, X,
   Image as ImageIcon, Code, Users as UsersIcon, Globe, Link as LinkIcon, Upload,
   Eye, EyeOff, Instagram, Facebook, Linkedin, Youtube, Music, Save, Share2
 } from 'lucide-react';
@@ -40,6 +40,52 @@ interface AdminUser {
   created_at: string;
 }
 
+// Otimiza e comprime imagem no navegador antes do upload para evitar limites de payload e deixar o carregamento rápido
+async function optimizeImageForUpload(file: File, maxWidth = 1920, maxHeight = 1080, quality = 0.85): Promise<Blob> {
+  if (!file.type.startsWith('image/') || file.type.includes('svg')) {
+    return file;
+  }
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
+        if (width > maxWidth || height > maxHeight) {
+          if (width / height > maxWidth / maxHeight) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          } else {
+            width = Math.round((width * maxHeight) / height);
+            height = maxHeight;
+          }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+          canvas.toBlob(
+            (blob) => {
+              resolve(blob || file);
+            },
+            file.type === 'image/png' ? 'image/png' : 'image/jpeg',
+            quality
+          );
+        } else {
+          resolve(file);
+        }
+      };
+      img.onerror = () => resolve(file);
+      img.src = e.target?.result as string;
+    };
+    reader.onerror = () => resolve(file);
+    reader.readAsDataURL(file);
+  });
+}
+
 export default function AdminDashboard() {
   const { user, token, logout, fetchUser } = useAdmin();
   const navigate = useNavigate();
@@ -72,6 +118,9 @@ export default function AdminDashboard() {
   const [isUploadingImage, setIsUploadingImage] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const [isReordering, setIsReordering] = useState(false);
 
   // Settings State (Webhook, Scripts)
   const [appSettings, setAppSettings] = useState<Record<string, string>>({
@@ -314,11 +363,13 @@ export default function AdminDashboard() {
     if (!selectedFile) return;
     
     setIsUploadingImage(true);
-    const formData = new FormData();
-    formData.append('image', selectedFile);
-    formData.append('alt', 'Slideshow Image');
-
     try {
+      // Otimiza no cliente para garantir envio rápido e evitar exceder limites de payload da Vercel
+      const optimizedBlob = await optimizeImageForUpload(selectedFile);
+      const formData = new FormData();
+      formData.append('image', optimizedBlob, selectedFile.name);
+      formData.append('alt', selectedFile.name.replace(/\.[^/.]+$/, ''));
+
       const response = await fetch('/api/gallery/upload', {
         method: 'POST',
         headers: {
@@ -326,22 +377,106 @@ export default function AdminDashboard() {
         },
         body: formData
       });
+      const data = await response.json().catch(() => ({}));
+
       if (response.ok) {
         setSelectedFile(null);
-        // Reset file input
         const fileInput = document.getElementById('gallery-upload') as HTMLInputElement;
         if (fileInput) fileInput.value = '';
         
-        fetchGallery();
+        await fetchGallery();
         setMessage({ text: 'Imagem carregada com sucesso!', type: 'success' });
       } else {
-        setMessage({ text: 'Erro ao carregar imagem.', type: 'error' });
+        setMessage({ text: data.error || 'Erro ao carregar imagem.', type: 'error' });
       }
-    } catch (err) {
-      setMessage({ text: 'Erro ao conectar com o servidor.', type: 'error' });
+    } catch (err: any) {
+      console.error('Upload error:', err);
+      setMessage({ text: err?.message || 'Erro ao conectar com o servidor.', type: 'error' });
     } finally {
       setIsUploadingImage(false);
     }
+  };
+
+  const saveGalleryOrder = async (orderedImages: GalleryImage[]) => {
+    setIsReordering(true);
+    try {
+      const payload = orderedImages.map((img, idx) => ({
+        id: img.id,
+        display_order: idx + 1,
+      }));
+
+      const response = await fetch('/api/gallery/reorder', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ order: payload })
+      });
+
+      if (response.ok) {
+        setMessage({ text: 'Ordem das imagens atualizada com sucesso!', type: 'success' });
+      } else {
+        const err = await response.json().catch(() => ({}));
+        setMessage({ text: err.error || 'Erro ao salvar a ordem das imagens.', type: 'error' });
+        fetchGallery();
+      }
+    } catch (error) {
+      setMessage({ text: 'Erro ao conectar com o servidor para salvar ordenação.', type: 'error' });
+      fetchGallery();
+    } finally {
+      setIsReordering(false);
+    }
+  };
+
+  const handleDragStart = (e: React.DragEvent, index: number) => {
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', `${index}`);
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (dragOverIndex !== index) {
+      setDragOverIndex(index);
+    }
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+  };
+
+  const handleDrop = async (e: React.DragEvent, targetIndex: number) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === targetIndex) {
+      setDraggedIndex(null);
+      setDragOverIndex(null);
+      return;
+    }
+
+    const updated = [...galleryImages];
+    const [draggedItem] = updated.splice(draggedIndex, 1);
+    updated.splice(targetIndex, 0, draggedItem);
+
+    setGalleryImages(updated);
+    setDraggedIndex(null);
+    setDragOverIndex(null);
+
+    await saveGalleryOrder(updated);
+  };
+
+  const handleMoveImage = async (index: number, direction: 'left' | 'right') => {
+    const targetIndex = direction === 'left' ? index - 1 : index + 1;
+    if (targetIndex < 0 || targetIndex >= galleryImages.length) return;
+
+    const updated = [...galleryImages];
+    const [item] = updated.splice(index, 1);
+    updated.splice(targetIndex, 0, item);
+
+    setGalleryImages(updated);
+    await saveGalleryOrder(updated);
   };
 
   const handleDeleteGalleryImage = async (id: number) => {
@@ -762,25 +897,110 @@ export default function AdminDashboard() {
                 </div>
               </form>
 
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-2">
+                <div>
+                  <h4 className="text-base font-bold text-white flex items-center gap-2">
+                    <span>Ordem de Exibição no Slideshow</span>
+                    <span className="text-xs font-normal text-gray-400">({galleryImages.length} imagens)</span>
+                  </h4>
+                  <p className="text-xs text-gray-400 mt-1">
+                    Arraste e solte os cards para reorganizar a sequência de exibição na página inicial, ou utilize os botões direcionais.
+                  </p>
+                </div>
+                {isReordering && (
+                  <div className="flex items-center gap-2 text-xs font-semibold text-nortyn-secondary bg-nortyn-secondary/10 px-3.5 py-1.5 rounded-full border border-nortyn-secondary/30 animate-pulse">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Salvando ordem...</span>
+                  </div>
+                )}
+              </div>
+
               {isGalleryLoading ? (
                 <div className="flex items-center justify-center py-20">
                   <Loader2 className="w-10 h-10 animate-spin text-nortyn-secondary opacity-50" />
                 </div>
               ) : (
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-                  {galleryImages.map((img) => (
-                    <div key={img.id} className="relative aspect-video rounded-2xl overflow-hidden group border border-white/10">
-                      <img src={img.url} alt={img.alt} className="w-full h-full object-cover transition-transform group-hover:scale-110" />
-                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <button 
-                          onClick={() => handleDeleteGalleryImage(img.id)}
-                          className="p-3 bg-red-500 rounded-full text-white hover:bg-red-600 transition-all transform translate-y-4 group-hover:translate-y-0"
-                        >
-                          <Trash2 className="w-5 h-5" />
-                        </button>
+                  {galleryImages.map((img, idx) => {
+                    const isDraggingThis = draggedIndex === idx;
+                    const isDragOverThis = dragOverIndex === idx && draggedIndex !== idx;
+
+                    return (
+                      <div 
+                        key={img.id} 
+                        draggable
+                        onDragStart={(e) => handleDragStart(e, idx)}
+                        onDragOver={(e) => handleDragOver(e, idx)}
+                        onDrop={(e) => handleDrop(e, idx)}
+                        onDragEnd={handleDragEnd}
+                        className={`relative aspect-video rounded-2xl overflow-hidden group border transition-all duration-200 select-none cursor-grab active:cursor-grabbing ${
+                          isDraggingThis 
+                            ? 'opacity-30 scale-95 border-dashed border-nortyn-secondary' 
+                            : isDragOverThis
+                            ? 'scale-105 border-nortyn-secondary ring-4 ring-nortyn-secondary/30 shadow-2xl z-10'
+                            : 'border-white/10 hover:border-nortyn-secondary/40 hover:shadow-lg'
+                        }`}
+                      >
+                        <img 
+                          src={img.url} 
+                          alt={img.alt || `Slide ${idx + 1}`} 
+                          className="w-full h-full object-cover pointer-events-none transition-transform group-hover:scale-105" 
+                        />
+                        
+                        {/* Badges superiores: Número da Ordem e Handle de Arraste */}
+                        <div className="absolute top-2.5 inset-x-2.5 flex items-center justify-between pointer-events-none z-10">
+                          <span className="px-2 py-0.5 rounded-md bg-black/75 backdrop-blur-md text-[11px] font-bold text-white border border-white/15 shadow-md">
+                            #{idx + 1}
+                          </span>
+                          <div className="p-1 rounded-md bg-black/75 backdrop-blur-md text-white/70 group-hover:text-nortyn-secondary group-hover:bg-black/90 transition-all border border-white/10 shadow-md">
+                            <GripVertical className="w-3.5 h-3.5" />
+                          </div>
+                        </div>
+
+                        {/* Barra de Ações Inferior (Aparece ao passar o mouse) */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-between p-3 z-10">
+                          <div className="flex items-center gap-1">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleMoveImage(idx, 'left');
+                              }}
+                              disabled={idx === 0 || isReordering}
+                              title="Mover para a esquerda"
+                              className="p-1.5 bg-white/10 hover:bg-white/20 disabled:opacity-30 disabled:pointer-events-none rounded-lg text-white transition-all"
+                            >
+                              <ChevronLeft className="w-4 h-4" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleMoveImage(idx, 'right');
+                              }}
+                              disabled={idx === galleryImages.length - 1 || isReordering}
+                              title="Mover para a direita"
+                              className="p-1.5 bg-white/10 hover:bg-white/20 disabled:opacity-30 disabled:pointer-events-none rounded-lg text-white transition-all"
+                            >
+                              <ChevronRight className="w-4 h-4" />
+                            </button>
+                          </div>
+
+                          <button 
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteGalleryImage(img.id);
+                            }}
+                            title="Remover imagem"
+                            className="p-2 bg-red-500/80 hover:bg-red-600 rounded-lg text-white transition-all shadow-md"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
