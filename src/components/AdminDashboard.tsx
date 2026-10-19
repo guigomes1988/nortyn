@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAdmin } from './AdminContext';
 import { 
@@ -121,6 +121,26 @@ export default function AdminDashboard() {
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const [isReordering, setIsReordering] = useState(false);
+  const [previewImageIndex, setPreviewImageIndex] = useState<number | null>(null);
+  const hasDraggedRef = useRef(false);
+
+  // Navegação por teclado no Lightbox da Galeria (ESC fecha, setas navegam)
+  useEffect(() => {
+    if (previewImageIndex === null) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setPreviewImageIndex(null);
+      } else if (e.key === 'ArrowLeft') {
+        setPreviewImageIndex(prev => (prev !== null && prev > 0 ? prev - 1 : prev));
+      } else if (e.key === 'ArrowRight') {
+        setPreviewImageIndex(prev => (prev !== null && prev < galleryImages.length - 1 ? prev + 1 : prev));
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [previewImageIndex, galleryImages.length]);
 
   // Settings State (Webhook, Scripts)
   const [appSettings, setAppSettings] = useState<Record<string, string>>({
@@ -430,6 +450,7 @@ export default function AdminDashboard() {
   };
 
   const handleDragStart = (e: React.DragEvent, index: number) => {
+    hasDraggedRef.current = true;
     setDraggedIndex(index);
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/plain', `${index}`);
@@ -446,6 +467,9 @@ export default function AdminDashboard() {
   const handleDragEnd = () => {
     setDraggedIndex(null);
     setDragOverIndex(null);
+    setTimeout(() => {
+      hasDraggedRef.current = false;
+    }, 150);
   };
 
   const handleDrop = async (e: React.DragEvent, targetIndex: number) => {
@@ -933,6 +957,11 @@ export default function AdminDashboard() {
                         onDragOver={(e) => handleDragOver(e, idx)}
                         onDrop={(e) => handleDrop(e, idx)}
                         onDragEnd={handleDragEnd}
+                        onClick={() => {
+                          if (!hasDraggedRef.current) {
+                            setPreviewImageIndex(idx);
+                          }
+                        }}
                         className={`relative aspect-video rounded-2xl overflow-hidden group border transition-all duration-200 select-none cursor-grab active:cursor-grabbing ${
                           isDraggingThis 
                             ? 'opacity-30 scale-95 border-dashed border-nortyn-secondary' 
@@ -957,46 +986,65 @@ export default function AdminDashboard() {
                           </div>
                         </div>
 
-                        {/* Barra de Ações Inferior (Aparece ao passar o mouse) */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-between p-3 z-10">
-                          <div className="flex items-center gap-1">
+                        {/* Barra de Ações (Aparece ao passar o mouse) */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-3 z-10 pointer-events-none">
+                          {/* Botão Central: Ampliar Lightbox */}
+                          <div className="flex justify-center pt-5">
                             <button
                               type="button"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                handleMoveImage(idx, 'left');
+                                setPreviewImageIndex(idx);
                               }}
-                              disabled={idx === 0 || isReordering}
-                              title="Mover para a esquerda"
-                              className="p-1.5 bg-white/10 hover:bg-white/20 disabled:opacity-30 disabled:pointer-events-none rounded-lg text-white transition-all"
+                              className="pointer-events-auto flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-nortyn-secondary hover:bg-[#00b3ab] text-white text-xs font-bold shadow-lg transition-all hover:scale-105"
+                              title="Clique para ampliar em tela cheia"
                             >
-                              <ChevronLeft className="w-4 h-4" />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleMoveImage(idx, 'right');
-                              }}
-                              disabled={idx === galleryImages.length - 1 || isReordering}
-                              title="Mover para a direita"
-                              className="p-1.5 bg-white/10 hover:bg-white/20 disabled:opacity-30 disabled:pointer-events-none rounded-lg text-white transition-all"
-                            >
-                              <ChevronRight className="w-4 h-4" />
+                              <Eye className="w-3.5 h-3.5" />
+                              <span>Ampliar</span>
                             </button>
                           </div>
 
-                          <button 
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteGalleryImage(img.id);
-                            }}
-                            title="Remover imagem"
-                            className="p-2 bg-red-500/80 hover:bg-red-600 rounded-lg text-white transition-all shadow-md"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                          {/* Ações Inferiores: Ordenar com Setas e Excluir */}
+                          <div className="flex items-center justify-between pointer-events-auto">
+                            <div className="flex items-center gap-1">
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleMoveImage(idx, 'left');
+                                }}
+                                disabled={idx === 0 || isReordering}
+                                title="Mover para a esquerda"
+                                className="p-1.5 bg-white/10 hover:bg-white/20 disabled:opacity-30 disabled:pointer-events-none rounded-lg text-white transition-all"
+                              >
+                                <ChevronLeft className="w-4 h-4" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleMoveImage(idx, 'right');
+                                }}
+                                disabled={idx === galleryImages.length - 1 || isReordering}
+                                title="Mover para a direita"
+                                className="p-1.5 bg-white/10 hover:bg-white/20 disabled:opacity-30 disabled:pointer-events-none rounded-lg text-white transition-all"
+                              >
+                                <ChevronRight className="w-4 h-4" />
+                              </button>
+                            </div>
+
+                            <button 
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteGalleryImage(img.id);
+                              }}
+                              title="Remover imagem"
+                              className="p-2 bg-red-500/80 hover:bg-red-600 rounded-lg text-white transition-all shadow-md"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
                         </div>
                       </div>
                     );
@@ -1469,6 +1517,88 @@ export default function AdminDashboard() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {/* Lightbox da Galeria */}
+      {previewImageIndex !== null && galleryImages[previewImageIndex] && (
+        <div 
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-md p-4 sm:p-6 md:p-8 animate-in fade-in duration-200"
+          onClick={() => setPreviewImageIndex(null)}
+        >
+          <div 
+            className="relative max-w-6xl w-full max-h-[92vh] flex flex-col items-center justify-center"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Barra superior de informações e fechar */}
+            <div className="w-full flex items-center justify-between pb-3 text-white">
+              <div className="flex items-center gap-3">
+                <span className="px-3 py-1 rounded-full bg-white/10 backdrop-blur-md text-xs font-bold border border-white/15">
+                  Foto {previewImageIndex + 1} de {galleryImages.length}
+                </span>
+                <span className="text-sm text-gray-300 font-medium truncate max-w-xs md:max-w-md">
+                  {galleryImages[previewImageIndex].alt || 'Slideshow Image'}
+                </span>
+              </div>
+              <button 
+                type="button"
+                onClick={() => setPreviewImageIndex(null)}
+                className="p-2.5 rounded-full bg-white/10 hover:bg-white/20 text-white transition-all border border-white/15 shadow-lg"
+                title="Fechar (ESC)"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Imagem ampliada */}
+            <div className="relative w-full flex items-center justify-center overflow-hidden rounded-2xl border border-white/10 bg-[#0B091E]/90 shadow-2xl">
+              <img 
+                src={galleryImages[previewImageIndex].url} 
+                alt={galleryImages[previewImageIndex].alt || `Slide ${previewImageIndex + 1}`}
+                className="max-w-full max-h-[75vh] w-auto h-auto object-contain select-none"
+              />
+
+              {/* Botão Anterior */}
+              {previewImageIndex > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setPreviewImageIndex(previewImageIndex - 1)}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/70 hover:bg-black/95 text-white border border-white/20 shadow-xl transition-all hover:scale-110"
+                  title="Foto anterior (Seta esquerda)"
+                >
+                  <ChevronLeft className="w-6 h-6" />
+                </button>
+              )}
+
+              {/* Botão Próximo */}
+              {previewImageIndex < galleryImages.length - 1 && (
+                <button
+                  type="button"
+                  onClick={() => setPreviewImageIndex(previewImageIndex + 1)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/70 hover:bg-black/95 text-white border border-white/20 shadow-xl transition-all hover:scale-110"
+                  title="Próxima foto (Seta direita)"
+                >
+                  <ChevronRight className="w-6 h-6" />
+                </button>
+              )}
+            </div>
+
+            {/* Rodapé com atalhos e ação de exclusão rápida */}
+            <div className="w-full flex items-center justify-between pt-3 text-xs text-gray-400">
+              <span className="hidden sm:inline">Use as setas do teclado (← / →) para navegar e ESC para fechar</span>
+              <button
+                type="button"
+                onClick={() => {
+                  const idToDelete = galleryImages[previewImageIndex].id;
+                  handleDeleteGalleryImage(idToDelete);
+                  setPreviewImageIndex(null);
+                }}
+                className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/30 transition-all font-medium"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>Excluir esta foto</span>
+              </button>
+            </div>
           </div>
         </div>
       )}
