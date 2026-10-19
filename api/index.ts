@@ -83,9 +83,11 @@ async function initDB() {
         role TEXT,
         revenue TEXT,
         sector TEXT,
+        origem TEXT,
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       )
     `;
+    await sql`ALTER TABLE leads ADD COLUMN IF NOT EXISTS origem TEXT;`;
 
     // Site Content table
     await sql`
@@ -392,24 +394,52 @@ app.post('/api/testimonials/upload', authenticateToken, upload.single('image'), 
   res.json({ url: imageUrl });
 });
 
-// --- LEADS ENDPOINT ---
-app.post('/api/leads', async (req, res) => {
-  const { name, email, phone, company, role, revenue, sector } = req.body;
+// --- LEADS ENDPOINTS ---
+app.get('/api/leads', authenticateToken, async (req, res) => {
+  try {
+    const leads = await sql`SELECT * FROM leads ORDER BY created_at DESC, id DESC`;
+    res.json(leads);
+  } catch (error) {
+    console.error('Error fetching leads:', error);
+    res.status(500).json({ error: 'Failed to fetch leads' });
+  }
+});
 
-  if (!name || !email) {
-    return res.status(400).json({ error: 'Name and email are required' });
+app.post('/api/leads', async (req, res) => {
+  const name = req.body.name || req.body.nome || '';
+  const email = req.body.email || '';
+  const phone = req.body.phone || req.body.fone || '';
+  const company = req.body.company || req.body.empresa || '';
+  const role = req.body.role || req.body.cargo || '';
+  const revenue = req.body.revenue || req.body.equipeVenda || '';
+  const sector = req.body.sector || req.body.setor || '';
+  const origem = req.body.origem || 'site';
+
+  if (!name && !email && !phone) {
+    return res.status(400).json({ error: 'Nome, email ou telefone são obrigatórios' });
   }
 
   try {
     const result = await sql`
-      INSERT INTO leads (name, email, phone, company, role, revenue, sector)
-      VALUES (${name}, ${email}, ${phone}, ${company}, ${role}, ${revenue}, ${sector})
+      INSERT INTO leads (name, email, phone, company, role, revenue, sector, origem)
+      VALUES (${name}, ${email}, ${phone}, ${company}, ${role}, ${revenue}, ${sector}, ${origem})
       RETURNING *
     `;
     res.status(201).json({ message: 'Lead captured successfully', data: result[0] });
   } catch (error) {
     console.error('Error inserting lead:', error);
     res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.delete('/api/leads/:id', authenticateToken, async (req, res) => {
+  const { id } = req.params;
+  try {
+    await sql`DELETE FROM leads WHERE id = ${id}`;
+    res.json({ message: 'Lead removido com sucesso' });
+  } catch (error) {
+    console.error('Error deleting lead:', error);
+    res.status(500).json({ error: 'Failed to delete lead' });
   }
 });
 

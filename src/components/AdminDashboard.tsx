@@ -5,11 +5,25 @@ import {
   Loader2, LogOut, User as UserIcon, Lock, CheckCircle2, 
   ChevronRight, ChevronLeft, GripVertical, ExternalLink, Settings, Home, FileText, MessageSquare, Plus, Trash2, Edit2, X,
   Image as ImageIcon, Code, Users as UsersIcon, Globe, Link as LinkIcon, Upload,
-  Eye, EyeOff, Instagram, Facebook, Linkedin, Youtube, Music, Save, Share2
+  Eye, EyeOff, Instagram, Facebook, Linkedin, Youtube, Music, Save, Share2,
+  Download, Search, Building2, Phone, Mail, FileSpreadsheet, Send, Target, Calendar
 } from 'lucide-react';
 import BrandGlow from './BrandGlow';
 
-type Tab = 'testimonials' | 'gallery' | 'socials' | 'settings' | 'users';
+type Tab = 'leads' | 'testimonials' | 'gallery' | 'socials' | 'settings' | 'users';
+
+interface Lead {
+  id: number;
+  name: string;
+  email: string;
+  phone: string;
+  company: string;
+  role: string;
+  revenue: string;
+  sector: string;
+  origem: string;
+  created_at: string;
+}
 
 interface SocialLink {
   id: number;
@@ -157,7 +171,19 @@ export default function AdminDashboard() {
   const [isCreatingUser, setIsCreatingUser] = useState(false);
   const [newUser, setNewUser] = useState({ name: '', email: '', password: '' });
 
+  // Leads State
+  const [leads, setLeads] = useState<Lead[]>([]);
+  const [isLeadsLoading, setIsLeadsLoading] = useState(false);
+  const [leadSearchTerm, setLeadSearchTerm] = useState('');
+  const [leadOriginFilter, setLeadOriginFilter] = useState<'all' | 'institucional' | 'diagnostico'>('all');
+
+  // Carrega contagem de leads ao carregar o dashboard
   useEffect(() => {
+    fetchLeads();
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === 'leads') fetchLeads();
     if (activeTab === 'testimonials') {
       fetchTestimonials();
       fetchAppSettings();
@@ -169,6 +195,88 @@ export default function AdminDashboard() {
     }
     if (activeTab === 'users') fetchAdminUsers();
   }, [activeTab]);
+
+  const fetchLeads = async () => {
+    setIsLeadsLoading(true);
+    try {
+      const response = await fetch('/api/leads', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setLeads(data);
+      }
+    } catch (err) {
+      console.error('Error fetching leads:', err);
+    } finally {
+      setIsLeadsLoading(false);
+    }
+  };
+
+  const handleDeleteLead = async (id: number) => {
+    if (!window.confirm('Tem certeza que deseja remover este lead do histórico local?')) return;
+    try {
+      const response = await fetch(`/api/leads/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (response.ok) {
+        setLeads(prev => prev.filter(l => l.id !== id));
+        setMessage({ text: 'Lead removido.', type: 'success' });
+      } else {
+        setMessage({ text: 'Erro ao remover lead.', type: 'error' });
+      }
+    } catch (err) {
+      setMessage({ text: 'Erro ao conectar com o servidor.', type: 'error' });
+    }
+  };
+
+  const filteredLeads = leads.filter(lead => {
+    const term = leadSearchTerm.toLowerCase();
+    const matchesSearch = 
+      (lead.name || '').toLowerCase().includes(term) ||
+      (lead.email || '').toLowerCase().includes(term) ||
+      (lead.company || '').toLowerCase().includes(term) ||
+      (lead.phone || '').toLowerCase().includes(term) ||
+      (lead.role || '').toLowerCase().includes(term) ||
+      (lead.sector || '').toLowerCase().includes(term);
+    
+    const matchesOrigin = 
+      leadOriginFilter === 'all' || 
+      (leadOriginFilter === 'institucional' && (lead.origem === 'institucional' || lead.origem === 'site' || !lead.origem)) ||
+      (leadOriginFilter === 'diagnostico' && lead.origem === 'diagnostico');
+
+    return matchesSearch && matchesOrigin;
+  });
+
+  const exportLeadsToCSV = () => {
+    if (filteredLeads.length === 0) {
+      alert('Nenhum lead para exportar.');
+      return;
+    }
+    const headers = ['ID', 'Nome', 'Email', 'Telefone', 'Empresa', 'Cargo', 'Setor', 'Equipe de Vendas', 'Origem', 'Data/Hora'];
+    const rows = filteredLeads.map(l => [
+      l.id,
+      `"${(l.name || '').replace(/"/g, '""')}"`,
+      `"${(l.email || '').replace(/"/g, '""')}"`,
+      `"${(l.phone || '').replace(/"/g, '""')}"`,
+      `"${(l.company || '').replace(/"/g, '""')}"`,
+      `"${(l.role || '').replace(/"/g, '""')}"`,
+      `"${(l.sector || '').replace(/"/g, '""')}"`,
+      `"${(l.revenue || '').replace(/"/g, '""')}"`,
+      `"${l.origem === 'diagnostico' ? 'Diagnóstico' : 'Demonstração'}"`,
+      `"${new Date(l.created_at).toLocaleString('pt-BR')}"`
+    ]);
+    const csvContent = '\uFEFF' + [headers.join(';'), ...rows.map(r => r.join(';'))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `leads-nortyn-${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   const fetchSocialLinks = async () => {
     setIsSocialsLoading(true);
@@ -725,6 +833,20 @@ export default function AdminDashboard() {
 
         <nav className="flex-1 p-4 flex flex-col gap-2">
           <button 
+            onClick={() => setActiveTab('leads')}
+            className={`flex items-center justify-between px-4 py-3 rounded-xl transition-all ${activeTab === 'leads' ? 'bg-nortyn-secondary text-white shadow-lg shadow-nortyn-secondary/20' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+          >
+            <div className="flex items-center gap-3">
+              <UsersIcon className="w-5 h-5" />
+              <span className="font-medium">Leads</span>
+            </div>
+            {leads.length > 0 && (
+              <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${activeTab === 'leads' ? 'bg-white/20 text-white' : 'bg-nortyn-secondary/20 text-nortyn-secondary'}`}>
+                {leads.length}
+              </span>
+            )}
+          </button>
+          <button 
             onClick={() => setActiveTab('testimonials')}
             className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${activeTab === 'testimonials' ? 'bg-nortyn-secondary text-white shadow-lg shadow-nortyn-secondary/20' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
           >
@@ -786,12 +908,22 @@ export default function AdminDashboard() {
         <header className="px-8 py-6 border-b border-white/5 flex items-center justify-between sticky top-0 bg-[#060515]/60 backdrop-blur-md z-30">
           <div>
             <h1 className="text-2xl font-bold">
-              {activeTab === 'testimonials' ? 'Depoimentos' : activeTab === 'gallery' ? 'Galeria Slideshow' : activeTab === 'socials' ? 'Redes Sociais' : activeTab === 'users' ? 'Gestão de Usuários' : 'Configurações'}
+              {activeTab === 'leads' ? 'Leads Recebidos' : activeTab === 'testimonials' ? 'Depoimentos' : activeTab === 'gallery' ? 'Galeria Slideshow' : activeTab === 'socials' ? 'Redes Sociais' : activeTab === 'users' ? 'Gestão de Usuários' : 'Configurações'}
             </h1>
             <p className="text-sm text-gray-400">
-              {activeTab === 'testimonials' ? 'Gerencie os depoimentos dos clientes.' : activeTab === 'gallery' ? 'Adicione imagens para o carrossel da página.' : activeTab === 'socials' ? 'Ative/desative redes sociais e edite os links das páginas Nortyn e Diagnóstico.' : activeTab === 'users' ? 'Administre os usuários do painel.' : 'Gerencie configurações, perfil e integrações.'}
+              {activeTab === 'leads' ? 'Acompanhe todos os leads capturados nos formulários do site.' : activeTab === 'testimonials' ? 'Gerencie os depoimentos dos clientes.' : activeTab === 'gallery' ? 'Adicione imagens para o carrossel da página.' : activeTab === 'socials' ? 'Ative/desative redes sociais e edite os links das páginas Nortyn e Diagnóstico.' : activeTab === 'users' ? 'Administre os usuários do painel.' : 'Gerencie configurações, perfil e integrações.'}
             </p>
           </div>
+          {activeTab === 'leads' && (
+            <button 
+              onClick={exportLeadsToCSV}
+              disabled={filteredLeads.length === 0}
+              className="bg-white/10 hover:bg-white/15 disabled:opacity-40 disabled:cursor-not-allowed text-white px-4 py-2.5 rounded-xl transition-all border border-white/10 flex items-center gap-2 text-sm font-semibold shadow-lg"
+            >
+              <Download className="w-4 h-4 text-nortyn-secondary" />
+              Exportar CSV
+            </button>
+          )}
           {activeTab === 'testimonials' && (
             <button 
               onClick={() => setEditingTestimonial({})}
@@ -809,6 +941,250 @@ export default function AdminDashboard() {
               {message.type === 'success' && <CheckCircle2 className="w-5 h-5 flex-shrink-0" />}
               <p className="text-sm font-medium">{message.text}</p>
               <button onClick={() => setMessage({ text: '', type: '' })} className="ml-auto opacity-50 hover:opacity-100"><X className="w-4 h-4" /></button>
+            </div>
+          )}
+
+          {activeTab === 'leads' && (
+            <div className="space-y-6">
+              {/* Cards de Métricas / Resumo */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="bg-[#0B091E]/60 border border-white/10 rounded-2xl p-5 backdrop-blur-sm">
+                  <div className="flex items-center justify-between text-gray-400 mb-2">
+                    <span className="text-xs font-semibold uppercase tracking-wider">Total de Leads</span>
+                    <UsersIcon className="w-5 h-5 text-nortyn-secondary" />
+                  </div>
+                  <div className="text-3xl font-bold text-white">{leads.length}</div>
+                  <p className="text-xs text-gray-400 mt-1">Registros salvos no site</p>
+                </div>
+
+                <div className="bg-[#0B091E]/60 border border-white/10 rounded-2xl p-5 backdrop-blur-sm">
+                  <div className="flex items-center justify-between text-gray-400 mb-2">
+                    <span className="text-xs font-semibold uppercase tracking-wider">Demonstração</span>
+                    <Send className="w-5 h-5 text-[#009a93]" />
+                  </div>
+                  <div className="text-3xl font-bold text-white">
+                    {leads.filter(l => l.origem !== 'diagnostico').length}
+                  </div>
+                  <p className="text-xs text-gray-400 mt-1">Formulário institucional</p>
+                </div>
+
+                <div className="bg-[#0B091E]/60 border border-white/10 rounded-2xl p-5 backdrop-blur-sm">
+                  <div className="flex items-center justify-between text-gray-400 mb-2">
+                    <span className="text-xs font-semibold uppercase tracking-wider">Diagnóstico</span>
+                    <Target className="w-5 h-5 text-purple-400" />
+                  </div>
+                  <div className="text-3xl font-bold text-white">
+                    {leads.filter(l => l.origem === 'diagnostico').length}
+                  </div>
+                  <p className="text-xs text-gray-400 mt-1">Formulário de diagnóstico</p>
+                </div>
+
+                <div className="bg-[#0B091E]/60 border border-white/10 rounded-2xl p-5 backdrop-blur-sm">
+                  <div className="flex items-center justify-between text-gray-400 mb-2">
+                    <span className="text-xs font-semibold uppercase tracking-wider">Último Lead</span>
+                    <Calendar className="w-5 h-5 text-blue-400" />
+                  </div>
+                  <div className="text-sm font-bold text-white truncate">
+                    {leads[0] ? leads[0].name : 'Nenhum lead ainda'}
+                  </div>
+                  <p className="text-xs text-gray-400 mt-1">
+                    {leads[0] ? new Date(leads[0].created_at).toLocaleDateString('pt-BR') : '-'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Barra de Filtros e Busca */}
+              <div className="bg-[#0B091E]/60 border border-white/10 rounded-2xl p-4 backdrop-blur-sm flex flex-col md:flex-row gap-4 items-stretch md:items-center justify-between">
+                <div className="relative flex-1">
+                  <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    placeholder="Buscar por nome, e-mail, empresa, telefone ou cargo..."
+                    value={leadSearchTerm}
+                    onChange={(e) => setLeadSearchTerm(e.target.value)}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-gray-400 outline-none focus:border-nortyn-secondary transition-all"
+                  />
+                  {leadSearchTerm && (
+                    <button 
+                      onClick={() => setLeadSearchTerm('')}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2 overflow-x-auto">
+                  <button
+                    type="button"
+                    onClick={() => setLeadOriginFilter('all')}
+                    className={`px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+                      leadOriginFilter === 'all'
+                        ? 'bg-nortyn-secondary text-white shadow-md'
+                        : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'
+                    }`}
+                  >
+                    Todos ({leads.length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setLeadOriginFilter('institucional')}
+                    className={`px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+                      leadOriginFilter === 'institucional'
+                        ? 'bg-nortyn-secondary text-white shadow-md'
+                        : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'
+                    }`}
+                  >
+                    Demonstração ({leads.filter(l => l.origem !== 'diagnostico').length})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setLeadOriginFilter('diagnostico')}
+                    className={`px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
+                      leadOriginFilter === 'diagnostico'
+                        ? 'bg-nortyn-secondary text-white shadow-md'
+                        : 'bg-white/5 text-gray-400 hover:text-white hover:bg-white/10'
+                    }`}
+                  >
+                    Diagnóstico ({leads.filter(l => l.origem === 'diagnostico').length})
+                  </button>
+                </div>
+              </div>
+
+              {/* Tabela de Leads */}
+              {isLeadsLoading ? (
+                <div className="flex items-center justify-center py-20">
+                  <Loader2 className="w-10 h-10 animate-spin text-nortyn-secondary opacity-50" />
+                </div>
+              ) : filteredLeads.length === 0 ? (
+                <div className="bg-[#0B091E]/60 border border-white/10 rounded-3xl p-12 text-center backdrop-blur-sm">
+                  <UsersIcon className="w-12 h-12 text-gray-600 mx-auto mb-3" />
+                  <h4 className="text-lg font-bold text-white mb-1">Nenhum lead encontrado</h4>
+                  <p className="text-sm text-gray-400 max-w-md mx-auto">
+                    {leadSearchTerm || leadOriginFilter !== 'all' 
+                      ? 'Nenhum lead corresponde aos filtros pesquisados. Tente alterar a busca.' 
+                      : 'Os dados preenchidos nos formulários de demonstração e diagnóstico aparecerão listados aqui.'}
+                  </p>
+                </div>
+              ) : (
+                <div className="bg-[#0B091E]/60 border border-white/10 rounded-3xl overflow-hidden backdrop-blur-sm shadow-xl">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="border-b border-white/10 bg-white/5 text-[10px] font-bold uppercase tracking-widest text-gray-400">
+                          <th className="px-6 py-4">Contato / Lead</th>
+                          <th className="px-6 py-4">Empresa & Cargo</th>
+                          <th className="px-6 py-4">Detalhes</th>
+                          <th className="px-6 py-4">Origem</th>
+                          <th className="px-6 py-4">Data do Envio</th>
+                          <th className="px-6 py-4 text-right">Ações</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-white/5">
+                        {filteredLeads.map((lead) => {
+                          const cleanPhone = (lead.phone || '').replace(/\D/g, '');
+                          const isDiagnostico = lead.origem === 'diagnostico';
+
+                          return (
+                            <tr key={lead.id} className="hover:bg-white/[0.03] transition-colors">
+                              {/* Contato */}
+                              <td className="px-6 py-4">
+                                <div className="font-bold text-white text-sm">{lead.name || 'Sem nome'}</div>
+                                <div className="text-xs text-gray-400 flex items-center gap-1.5 mt-0.5">
+                                  <Mail className="w-3 h-3 text-gray-500" />
+                                  <a href={`mailto:${lead.email}`} className="hover:text-nortyn-secondary transition-colors truncate max-w-[200px]">
+                                    {lead.email}
+                                  </a>
+                                </div>
+                                {lead.phone && (
+                                  <div className="text-xs text-gray-400 flex items-center gap-1.5 mt-1">
+                                    <Phone className="w-3 h-3 text-gray-500" />
+                                    <span className="font-mono">{lead.phone}</span>
+                                    <a
+                                      href={`https://wa.me/55${cleanPhone}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="text-emerald-400 hover:text-emerald-300 p-0.5 hover:bg-emerald-500/10 rounded transition-all ml-1 font-semibold"
+                                      title="Abrir no WhatsApp"
+                                    >
+                                      WhatsApp
+                                    </a>
+                                  </div>
+                                )}
+                              </td>
+
+                              {/* Empresa & Cargo */}
+                              <td className="px-6 py-4">
+                                <div className="text-sm font-semibold text-white flex items-center gap-1.5">
+                                  <Building2 className="w-3.5 h-3.5 text-nortyn-secondary" />
+                                  <span>{lead.company || '-'}</span>
+                                </div>
+                                <div className="text-xs text-gray-400 mt-0.5">
+                                  {lead.role || 'Cargo não informado'}
+                                </div>
+                              </td>
+
+                              {/* Detalhes (Setor e Equipe) */}
+                              <td className="px-6 py-4">
+                                {lead.sector && (
+                                  <div className="text-xs text-gray-300">
+                                    <span className="text-gray-500">Setor: </span>
+                                    {lead.sector}
+                                  </div>
+                                )}
+                                {lead.revenue && (
+                                  <div className="text-xs text-gray-400 mt-0.5">
+                                    <span className="text-gray-500">Equipe: </span>
+                                    {lead.revenue}
+                                  </div>
+                                )}
+                                {!lead.sector && !lead.revenue && (
+                                  <span className="text-xs text-gray-500">-</span>
+                                )}
+                              </td>
+
+                              {/* Origem */}
+                              <td className="px-6 py-4">
+                                {isDiagnostico ? (
+                                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-purple-500/15 text-purple-300 border border-purple-500/30">
+                                    <Target className="w-3 h-3" />
+                                    Diagnóstico
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-[#009a93]/15 text-[#009a93] border border-[#009a93]/30">
+                                    <Send className="w-3 h-3" />
+                                    Demonstração
+                                  </span>
+                                )}
+                              </td>
+
+                              {/* Data */}
+                              <td className="px-6 py-4 text-xs text-gray-400 whitespace-nowrap">
+                                <div>{new Date(lead.created_at).toLocaleDateString('pt-BR')}</div>
+                                <div className="text-[10px] text-gray-500 mt-0.5">
+                                  {new Date(lead.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                                </div>
+                              </td>
+
+                              {/* Ações */}
+                              <td className="px-6 py-4 text-right">
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteLead(lead.id)}
+                                  className="p-2 text-red-400 hover:bg-red-400/10 rounded-lg transition-all"
+                                  title="Excluir este lead"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

@@ -86,5 +86,25 @@ export async function submitLead(payload: LeadPayload): Promise<CrmResponse> {
     throw new Error(errorMsg);
   }
 
+  // Armazena uma cópia local no banco de dados do site para visualização na área administrativa
+  try {
+    fetch('/api/leads', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: payload.nome,
+        email: payload.email,
+        phone: payload.fone,
+        company: payload.empresa,
+        role: payload.cargo,
+        sector: payload.setor,
+        revenue: payload.equipeVenda,
+        origem: payload.origem,
+      }),
+    }).catch((err) => console.warn('[CRM] Erro ao salvar cópia local do lead:', err));
+  } catch (localErr) {
+    console.warn('[CRM] Erro ao disparar gravação local do lead:', localErr);
+  }
+
   return result;
 }
