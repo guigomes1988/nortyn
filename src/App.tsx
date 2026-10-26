@@ -2,10 +2,12 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Diagnostico from './diagnostico';
 import Demonstracao from './demonstracao';
+import PoliticaPrivacidade from './politica-privacidade';
 import AdminLogin from './components/AdminLogin';
 import AdminDashboard from './components/AdminDashboard';
 import { AdminProvider, useAdmin } from './components/AdminContext';
 import AdminToolbar from './components/AdminToolbar';
+import CookieConsent from './components/CookieConsent';
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAdmin();
@@ -29,6 +31,8 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Demonstracao />} />
           <Route path="/diagnostico" element={<Diagnostico />} />
+          <Route path="/politica-de-privacidade" element={<PoliticaPrivacidade />} />
+          <Route path="/politica-privacidade" element={<PoliticaPrivacidade />} />
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route 
             path="/admin" 
@@ -39,6 +43,7 @@ export default function App() {
             } 
           />
         </Routes>
+        <CookieConsent />
       </AdminProvider>
     </Router>
   );

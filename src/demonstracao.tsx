@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { Rocket, LineChart, Target, Check, ArrowUpRight, Database, Eye, Send, Lightbulb, ClipboardList, Search, TrendingUp, Instagram, Facebook, Linkedin, Youtube, Music, Menu, X, ChevronLeft, ChevronRight, Globe } from 'lucide-react';
 import { motion } from 'motion/react';
 import BrandGlow from './components/BrandGlow';
@@ -1144,6 +1145,19 @@ export default function Demonstracao() {
                 {getSocialIcon(link.platform)}
               </a>
             ))}
+          </div>
+
+          <div className="mt-8 flex flex-wrap justify-center gap-6 text-sm text-white/75">
+            <Link to="/politica-de-privacidade" className="hover:text-white transition-colors underline underline-offset-4">
+              Política de Privacidade
+            </Link>
+            <button
+              type="button"
+              onClick={() => window.dispatchEvent(new CustomEvent('open-cookie-settings'))}
+              className="hover:text-white transition-colors underline underline-offset-4 cursor-pointer"
+            >
+              Configurações de Cookies
+            </button>
           </div>
         </div>
 

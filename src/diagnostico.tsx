@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { ArrowRight, Menu, Image as ImageIcon, MoreVertical, ArrowUpRight, FileSpreadsheet, EyeOff, Target, Brain, TrendingDown, Users, ChevronDown, Check, Info, Aperture, Circle, Square, Triangle, Hexagon, Octagon, Box, Linkedin, Instagram, Facebook, Youtube, Music, Mail, Phone, MapPin, ArrowUp, Activity, Zap, Globe } from 'lucide-react';
 import { motion, useScroll, useTransform } from 'motion/react';
 import BrandGlow from './components/BrandGlow';
@@ -935,6 +936,18 @@ export default function Diagnostico() {
               <p className="text-white/40 text-xs">
                 © {new Date().getFullYear()} Nortyn. Todos os direitos reservados.
               </p>
+              <div className="flex items-center gap-6 text-xs text-white/60">
+                <Link to="/politica-de-privacidade" className="hover:text-white transition-colors underline underline-offset-4">
+                  Política de Privacidade
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => window.dispatchEvent(new CustomEvent('open-cookie-settings'))}
+                  className="hover:text-white transition-colors underline underline-offset-4 cursor-pointer"
+                >
+                  Configurações de Cookies
+                </button>
+              </div>
               <p className="text-white/20 text-[10px] uppercase tracking-widest">
                 Desenvolvido por <a href="https://www.gaidendesign.com.br" target="_blank" rel="noopener noreferrer" className="hover:text-nortyn-secondary transition-colors">Gaiden Design</a>
               </p>
