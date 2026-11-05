@@ -8,6 +8,8 @@ import AdminDashboard from './components/AdminDashboard';
 import { AdminProvider, useAdmin } from './components/AdminContext';
 import AdminToolbar from './components/AdminToolbar';
 import CookieConsent from './components/CookieConsent';
+import { LanguageProvider } from './i18n/LanguageContext';
+import LanguageBar from './components/LanguageBar';
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { isAuthenticated, isLoading } = useAdmin();
@@ -26,25 +28,28 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
 export default function App() {
   return (
     <Router>
-      <AdminProvider>
-        <AdminToolbar />
-        <Routes>
-          <Route path="/" element={<Demonstracao />} />
-          <Route path="/diagnostico" element={<Diagnostico />} />
-          <Route path="/politica-de-privacidade" element={<PoliticaPrivacidade />} />
-          <Route path="/politica-privacidade" element={<PoliticaPrivacidade />} />
-          <Route path="/admin/login" element={<AdminLogin />} />
-          <Route 
-            path="/admin" 
-            element={
-              <RequireAuth>
-                <AdminDashboard />
-              </RequireAuth>
-            } 
-          />
-        </Routes>
-        <CookieConsent />
-      </AdminProvider>
+      <LanguageProvider>
+        <AdminProvider>
+          <LanguageBar />
+          <AdminToolbar />
+          <Routes>
+            <Route path="/" element={<Demonstracao />} />
+            <Route path="/diagnostico" element={<Diagnostico />} />
+            <Route path="/politica-de-privacidade" element={<PoliticaPrivacidade />} />
+            <Route path="/politica-privacidade" element={<PoliticaPrivacidade />} />
+            <Route path="/admin/login" element={<AdminLogin />} />
+            <Route 
+              path="/admin" 
+              element={
+                <RequireAuth>
+                  <AdminDashboard />
+                </RequireAuth>
+              } 
+            />
+          </Routes>
+          <CookieConsent />
+        </AdminProvider>
+      </LanguageProvider>
     </Router>
   );
 }

@@ -1,5 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 import { useAdmin } from './AdminContext';
+import { useLanguage } from '../i18n/LanguageContext';
 
 interface EditableElementProps {
   contentKey: string;
@@ -17,10 +18,13 @@ export default function EditableElement({
   style = {} 
 }: EditableElementProps) {
   const { isVisualEditing, siteContent, updateContent } = useAdmin();
+  const { t } = useLanguage();
   const elementRef = useRef<HTMLElement>(null);
   const TagComponent = as as any;
 
-  const currentContent = siteContent[contentKey] ?? defaultContent;
+  // Prioriza o conteúdo editado pelo admin se houver; caso contrário, usa a tradução ativa
+  const translatedContent = t(contentKey, defaultContent);
+  const currentContent = siteContent[contentKey] ?? translatedContent;
 
   useEffect(() => {
     if (elementRef.current && elementRef.current.innerHTML !== currentContent) {

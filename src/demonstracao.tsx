@@ -7,6 +7,7 @@ import { siteConfig } from './config/siteConfig';
 import EditableElement from './components/EditableElement';
 import { submitLead } from './services/crmService';
 import { trackLead } from './services/analytics';
+import { useLanguage } from './i18n/LanguageContext';
 
 const fadeInUp = {
   initial: { opacity: 0, y: 40 },
@@ -36,6 +37,7 @@ const staggerItem = {
 };
 
 export default function Demonstracao() {
+  const { t, getWhatsAppUrl } = useLanguage();
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -66,8 +68,6 @@ export default function Demonstracao() {
 
   const nextSlide = () => setCurrentSlide((prev) => (prev + 1) % screens.length);
   const prevSlide = () => setCurrentSlide((prev) => (prev - 1 + screens.length) % screens.length);
-
-
 
   useEffect(() => {
     const fetchTestimonials = async () => {
@@ -181,7 +181,7 @@ export default function Demonstracao() {
       case 'instagram': return <Instagram className="w-6 h-6" />;
       case 'linkedin': return <Linkedin className="w-6 h-6" />;
       case 'youtube': return <Youtube className="w-6 h-6" />;
-      case 'tiktok': return <Music className="w-6 h-6" />; // Music icon as a fallback for TikTok
+      case 'tiktok': return <Music className="w-6 h-6" />;
       default: return <Globe className="w-6 h-6" />;
     }
   };
@@ -190,7 +190,7 @@ export default function Demonstracao() {
     e.preventDefault();
 
     if (!phone || phone.replace(/\D/g, '').length < 10) {
-      alert('Por favor, informe um telefone ou WhatsApp válido com DDD.');
+      alert(t('demo.form.phoneError', 'Por favor, informe um telefone ou WhatsApp válido com DDD.'));
       return;
     }
 
@@ -217,7 +217,7 @@ export default function Demonstracao() {
         origem: 'institucional',
       });
 
-      // Se houver webhook secundário configurado pelo admin (e não for o teste antigo), dispara em background
+      // Se houver webhook secundário configurado pelo admin, dispara em background
       if (appSettings?.webhook_url && !appSettings.webhook_url.includes('webhook-test')) {
         fetch(appSettings.webhook_url, {
           method: 'POST',
@@ -236,14 +236,20 @@ export default function Demonstracao() {
       setFormSubmitted(true);
     } catch (error: any) {
       console.error('Erro ao enviar lead:', error);
-      alert(error?.message || 'Erro ao enviar o formulário. Por favor, tente novamente.');
+      alert(error?.message || t('demo.form.phoneError', 'Erro ao enviar o formulário. Por favor, tente novamente.'));
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const navItems = [
+    { href: '#empresa', label: t('nav.empresa', 'Empresa') },
+    { href: '#beneficios', label: t('nav.beneficios', 'Benefícios') },
+    { href: '#sobre-nos', label: t('nav.sobre', 'Sobre nós') },
+  ];
+
   return (
-    <div className="font-sans text-[#1d1d30]">
+    <div className="font-sans text-[#1d1d30] pt-10">
       {/* Hero Section */}
       <div className="w-full overflow-hidden flex flex-col relative" style={{ backgroundColor: '#01031b' }}>
         {/* Noise Texture */}
@@ -265,14 +271,14 @@ export default function Demonstracao() {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-white/80">
-            {siteConfig.navigation.map((item) => (
+            {navItems.map((item) => (
               <a key={item.href} href={item.href} className="hover:text-[#00a99d] transition-colors">{item.label}</a>
             ))}
           </nav>
 
           <div className="flex items-center gap-4">
             <a href="#demonstracao" className="hidden md:flex bg-[#009a93] text-white px-6 py-2.5 rounded-lg font-semibold text-lg transition-all duration-300 hover:opacity-90 hover:scale-105 shadow-md">
-              Agendar demonstração
+              {t('nav.agendar', 'Agendar demonstração')}
             </a>
 
             {/* Mobile Menu Button */}
@@ -295,7 +301,7 @@ export default function Demonstracao() {
             <div className="flex flex-col h-full px-8 pt-32 pb-12">
               {/* Menu Links */}
               <div className="flex flex-col gap-6">
-                {siteConfig.navigation.map((item, index) => (
+                {navItems.map((item, index) => (
                   <motion.a
                     key={item.href}
                     href={item.href}
@@ -322,13 +328,13 @@ export default function Demonstracao() {
                   className="inline-block w-full bg-gradient-to-r from-[#00a99d] to-[#2e3192] text-white text-center px-8 py-4 rounded-xl font-bold text-lg shadow-lg"
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  Agendar demonstração
+                  {t('nav.agendar', 'Agendar demonstração')}
                 </a>
               </motion.div>
 
               {/* Footer Info in Menu */}
               <div className="mt-auto border-t border-white/10 pt-8">
-                <p className="text-gray-400 text-sm mb-4">Redes Sociais e Contato</p>
+                <p className="text-gray-400 text-sm mb-4">{t('nav.social_title', 'Redes Sociais e Contato')}</p>
                 <div className="flex items-center gap-6 mb-6">
                   {socialLinks.filter(link => link.is_active).map(link => (
                     <a
@@ -355,36 +361,35 @@ export default function Demonstracao() {
         >
           <EditableElement
             contentKey="nortyn.hero.overline"
-            defaultContent={siteConfig.hero.badge}
+            defaultContent={t('nortyn.hero.overline', siteConfig.hero.badge)}
             className="text-sm font-light tracking-[0.6em] uppercase mb-6 text-[#00a99d] opacity-90 ml-[0.6em] block"
           />
 
           <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold font-atkinson leading-[1.1] mb-6 text-white tracking-[-0.02em] max-w-4xl">
             <EditableElement
               contentKey="nortyn.hero.headline"
-              defaultContent={siteConfig.hero.title}
+              defaultContent={t('nortyn.hero.headline', siteConfig.hero.title)}
             />
           </h1>
 
           <p className="text-lg md:text-xl text-gray-400 mb-10 max-w-3xl">
             <EditableElement
               contentKey="nortyn.hero.subheadline"
-              defaultContent={siteConfig.hero.subtitle}
+              defaultContent={t('nortyn.hero.subheadline', siteConfig.hero.subtitle)}
             />
           </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16 z-10 w-full">
             <a href="#demonstracao" className="bg-gradient-to-r from-[#00a99d] to-[#2e3192] text-white px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-300 hover:opacity-90 hover:scale-105 shadow-xl w-full sm:w-auto text-center">
-              {siteConfig.hero.primaryCta}
+              {t('demo.hero.primaryCta', siteConfig.hero.primaryCta)}
             </a>
             <a href="#beneficios" className="border-2 border-white/20 text-white bg-transparent px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-300 hover:bg-white/10 hover:scale-105 w-full sm:w-auto text-center">
-              {siteConfig.hero.secondaryCta}
+              {t('demo.hero.secondaryCta', siteConfig.hero.secondaryCta)}
             </a>
           </div>
 
           {/* Visual Diagram (Smartphone & Prints) */}
           <div className="relative w-full max-w-5xl mx-auto flex justify-center items-start mt-4 h-[400px] md:h-[600px]">
-
             {/* Left Card */}
             <div className="hidden lg:flex absolute left-0 top-[100px] z-10 w-[320px] flex-col transition-transform duration-300 hover:scale-105 hover:z-30">
               <div className="rounded-xl overflow-hidden shadow-2xl">
@@ -405,7 +410,6 @@ export default function Demonstracao() {
                 <img src="/telas/03.png" alt="Gestão" className="w-full h-auto object-cover" />
               </div>
             </div>
-
           </div>
         </motion.main>
       </div>
@@ -425,10 +429,10 @@ export default function Demonstracao() {
           {/* Section Header */}
           <div className="mb-16 md:mb-24 max-w-3xl">
             <h2 className="text-4xl md:text-5xl font-bold font-atkinson text-[#1d1d30] leading-tight mb-6">
-              Estruture sua engrenagem de vendas em tempo recorde.
+              {t('demo.benefits.title', 'Estruture sua engrenagem de vendas em tempo recorde.')}
             </h2>
             <p className="text-xl text-gray-600">
-              Sem a complexidade dos CRMs tradicionais.
+              {t('demo.benefits.subtitle', 'Sem a complexidade dos CRMs tradicionais.')}
             </p>
           </div>
 
@@ -453,9 +457,11 @@ export default function Demonstracao() {
               >
                 <Rocket className="w-7 h-7 text-[#00a99d]" strokeWidth={1.5} />
               </motion.div>
-              <h3 className="text-xl font-bold text-[#1d1d30] mb-4">Implementação Ágil</h3>
+              <h3 className="text-xl font-bold text-[#1d1d30] mb-4">
+                {t('demo.benefits.card1.title', 'Implementação Ágil')}
+              </h3>
               <p className="text-gray-500 leading-relaxed">
-                Implemente a Nortyn em até duas semanas e comece a ver os resultados na sua operação quase imediatamente.
+                {t('demo.benefits.card1.desc', 'Implemente a Nortyn em até duas semanas e comece a ver os resultados na sua operação quase imediatamente.')}
               </p>
             </motion.div>
 
@@ -472,9 +478,11 @@ export default function Demonstracao() {
               >
                 <LineChart className="w-7 h-7 text-[#00a99d]" strokeWidth={1.5} />
               </motion.div>
-              <h3 className="text-xl font-bold text-[#1d1d30] mb-4">Acompanhamento em Tempo Real</h3>
+              <h3 className="text-xl font-bold text-[#1d1d30] mb-4">
+                {t('demo.benefits.card2.title', 'Acompanhamento em Tempo Real')}
+              </h3>
               <p className="text-gray-500 leading-relaxed">
-                Tenha visão clara das vendas e saiba exatamente o que está acontecendo com o seu faturamento hoje.
+                {t('demo.benefits.card2.desc', 'Tenha visão clara das vendas e saiba exatamente o que está acontecendo com o seu faturamento hoje.')}
               </p>
             </motion.div>
 
@@ -491,9 +499,11 @@ export default function Demonstracao() {
               >
                 <Target className="w-7 h-7 text-[#00a99d]" strokeWidth={1.5} />
               </motion.div>
-              <h3 className="text-xl font-bold text-[#1d1d30] mb-4">Engajamento da Equipe</h3>
+              <h3 className="text-xl font-bold text-[#1d1d30] mb-4">
+                {t('demo.benefits.card3.title', 'Engajamento da Equipe')}
+              </h3>
               <p className="text-gray-500 leading-relaxed">
-                Garanta metas bem distribuídas e um acompanhamento real de cada representante comercial.
+                {t('demo.benefits.card3.desc', 'Garanta metas bem distribuídas e um acompanhamento real de cada representante comercial.')}
               </p>
             </motion.div>
           </motion.div>
@@ -502,10 +512,10 @@ export default function Demonstracao() {
           <motion.div {...fadeInUp} className="mt-32 md:mt-48">
             <div className="text-center mb-16">
               <h3 className="text-3xl md:text-4xl font-bold font-atkinson text-[#1d1d30] mb-4">
-                Conheça a interface da Nortyn
+                {t('demo.gallery.title', 'Conheça a interface da Nortyn')}
               </h3>
               <p className="text-lg text-gray-500 max-w-2xl mx-auto">
-                Uma experiência visual pensada para facilitar a tomada de decisão rápida e intuitiva.
+                {t('demo.gallery.subtitle', 'Uma experiência visual pensada para facilitar a tomada de decisão rápida e intuitiva.')}
               </p>
             </div>
 
@@ -595,13 +605,13 @@ export default function Demonstracao() {
 
           <motion.div {...fadeInUp} className="max-w-7xl mx-auto px-6 mb-16">
             <span className="text-sm font-bold tracking-widest uppercase mb-4 block text-[#312783] opacity-90">
-              DEPOIMENTOS
+              {t('demo.testimonials.badge', 'DEPOIMENTOS')}
             </span>
             <h2 className="text-4xl md:text-5xl font-bold font-atkinson text-[#1d1d30] leading-tight mb-6">
-              Empresas que confiam na Nortyn
+              {t('demo.testimonials.title', 'Empresas que confiam na Nortyn')}
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl">
-              A Nortyn já é a plataforma de dezenas de empresas que buscam escalabilidade.
+              {t('demo.testimonials.subtitle', 'A Nortyn já é a plataforma de dezenas de empresas que buscam escalabilidade.')}
             </p>
           </motion.div>
 
@@ -668,10 +678,10 @@ export default function Demonstracao() {
           {/* Header */}
           <div className="flex flex-col items-center text-center mb-16">
             <h2 className="text-4xl md:text-5xl font-bold font-atkinson text-[#1d1d30] leading-tight mb-6">
-              Menos planilha. Melhor decisão. Melhores resultados.
+              {t('demo.bento.title', 'Menos planilha. Melhor decisão. Melhores resultados.')}
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl">
-              Trabalhando em conjunto com o seu ERP atual, sem integrações complexas. A Nortyn organiza seus dados e dá previsibilidade diária para sua equipe em uma única plataforma.
+              {t('demo.bento.subtitle', 'Trabalhando em conjunto com o seu ERP atual, sem integrações complexas. A Nortyn organiza seus dados e dá previsibilidade diária para sua equipe em uma única plataforma.')}
             </p>
           </div>
 
@@ -683,7 +693,6 @@ export default function Demonstracao() {
             viewport={{ once: true, margin: "-100px" }}
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
           >
-
             {/* Card 1 (Hero Vertical) */}
             <motion.div
               variants={staggerItem}
@@ -691,9 +700,11 @@ export default function Demonstracao() {
               className="relative overflow-hidden lg:col-span-1 lg:row-span-2 bg-[#312783] text-white rounded-3xl p-8 transition-transform shadow-sm flex flex-col min-h-[450px]"
             >
               <div className="relative z-10">
-                <h3 className="text-2xl font-bold mb-4">Vendas e Dashboards em Tempo Real</h3>
+                <h3 className="text-2xl font-bold mb-4">
+                  {t('demo.bento.card1.title', 'Vendas e Dashboards em Tempo Real')}
+                </h3>
                 <p className="text-white/80 text-sm leading-relaxed">
-                  Acompanhe o Real x Meta consolidado diariamente. A diretoria ganha relatórios estruturados para tomar decisões sem depender de planilhas.
+                  {t('demo.bento.card1.desc', 'Acompanhe o Real x Meta consolidado diariamente. A diretoria ganha relatórios estruturados para tomar decisões sem depender de planilhas.')}
                 </p>
               </div>
               {/* Fake UI Bottom */}
@@ -714,9 +725,11 @@ export default function Demonstracao() {
               className="relative overflow-hidden lg:col-span-2 lg:row-span-2 bg-white text-[#1d1d30] rounded-3xl p-8 transition-transform shadow-sm flex flex-col justify-center min-h-[450px]"
             >
               <div className="relative z-10 max-w-sm">
-                <h3 className="text-3xl md:text-4xl font-bold mb-4">Distribuição e Comunicação Automatizada</h3>
+                <h3 className="text-3xl md:text-4xl font-bold mb-4">
+                  {t('demo.bento.card2.title', 'Distribuição e Comunicação Automatizada')}
+                </h3>
                 <p className="text-gray-600 leading-relaxed">
-                  Configure regras, pesos e restrições. A comunicação desce para a equipe eliminando falhas humanas.
+                  {t('demo.bento.card2.desc', 'Configure regras, pesos e restrições. A comunicação desce para a equipe eliminando falhas humanas.')}
                 </p>
               </div>
               {/* Fake UI Right */}
@@ -753,9 +766,11 @@ export default function Demonstracao() {
               className="relative overflow-hidden lg:col-span-1 lg:row-span-1 bg-slate-50 text-[#1d1d30] rounded-3xl p-8 transition-transform shadow-sm flex flex-col min-h-[250px]"
             >
               <div className="relative z-10">
-                <h3 className="text-xl font-bold mb-2">Previsão Dia a Dia</h3>
+                <h3 className="text-xl font-bold mb-2">
+                  {t('demo.bento.card3.title', 'Previsão Dia a Dia')}
+                </h3>
                 <p className="text-sm text-gray-600 leading-relaxed">
-                  Acompanhamento estratificado por profissional.
+                  {t('demo.bento.card3.desc', 'Acompanhamento estratificado por profissional.')}
                 </p>
               </div>
               {/* Fake Chart Bottom */}
@@ -782,9 +797,11 @@ export default function Demonstracao() {
 
               <div className="relative z-10 flex flex-col items-center">
                 <Lightbulb className="w-12 h-12 text-[#312783] mb-4" strokeWidth={1.5} />
-                <h3 className="text-xl font-bold mb-2">Inteligência Ativa</h3>
+                <h3 className="text-xl font-bold mb-2">
+                  {t('demo.bento.card4.title', 'Inteligência Ativa')}
+                </h3>
                 <p className="text-sm text-gray-600 leading-relaxed">
-                  Alertas para atuar no que importa e identificar gargalos.
+                  {t('demo.bento.card4.desc', 'Alertas para atuar no que importa e identificar gargalos.')}
                 </p>
               </div>
             </motion.div>
@@ -796,9 +813,11 @@ export default function Demonstracao() {
               className="relative overflow-hidden lg:col-span-2 lg:row-span-1 bg-white text-[#1d1d30] rounded-3xl p-8 transition-transform shadow-sm flex flex-col md:flex-row items-center min-h-[200px]"
             >
               <div className="relative z-10 md:w-1/2">
-                <h3 className="text-2xl font-bold mb-2">Planos de Ação</h3>
+                <h3 className="text-2xl font-bold mb-2">
+                  {t('demo.bento.card5.title', 'Planos de Ação')}
+                </h3>
                 <p className="text-sm text-gray-600 leading-relaxed">
-                  Crie cenários e direcione oportunidades exatas.
+                  {t('demo.bento.card5.desc', 'Crie cenários e direcione oportunidades exatas.')}
                 </p>
               </div>
               {/* Gantt Chart Right */}
@@ -822,9 +841,11 @@ export default function Demonstracao() {
               className="relative overflow-hidden lg:col-span-2 lg:row-span-1 bg-gradient-to-br from-[#312783] to-[#4a3b9c] text-white rounded-3xl p-8 transition-transform shadow-sm flex flex-col md:flex-row items-center min-h-[200px]"
             >
               <div className="relative z-10 md:w-2/3">
-                <h3 className="text-2xl font-bold mb-2">Foco em Execução</h3>
+                <h3 className="text-2xl font-bold mb-2">
+                  {t('demo.bento.card6.title', 'Foco em Execução')}
+                </h3>
                 <p className="text-sm text-white/80 leading-relaxed">
-                  A equipe abandona as planilhas e acompanha metas na palma da mão (Web/Mobile).
+                  {t('demo.bento.card6.desc', 'A equipe abandona as planilhas e acompanha metas na palma da mão (Web/Mobile).')}
                 </p>
               </div>
               {/* Giant Check Silhouette */}
@@ -842,9 +863,11 @@ export default function Demonstracao() {
               <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 mb-6 bg-white text-[#312783]">
                 <LineChart className="w-6 h-6" strokeWidth={2} />
               </div>
-              <h3 className="text-xl font-bold mb-2 text-[#312783]">Visão Executiva Clara</h3>
+              <h3 className="text-xl font-bold mb-2 text-[#312783]">
+                {t('demo.bento.card7.title', 'Visão Executiva Clara')}
+              </h3>
               <p className="text-sm text-gray-700 leading-relaxed">
-                Indicadores e painéis objetivos desenhados especificamente para a diretoria e gerência acompanharem o pulso do negócio.
+                {t('demo.bento.card7.desc', 'Indicadores e painéis objetivos desenhados especificamente para a diretoria e gerência acompanharem o pulso do negócio.')}
               </p>
             </motion.div>
 
@@ -858,9 +881,11 @@ export default function Demonstracao() {
                 <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 mb-6 bg-[#f0fdfa] text-[#009a93]">
                   <Target className="w-6 h-6" strokeWidth={2} />
                 </div>
-                <h3 className="text-2xl font-bold mb-2 text-[#1d1d30]">Segmentação Estratégica</h3>
+                <h3 className="text-2xl font-bold mb-2 text-[#1d1d30]">
+                  {t('demo.bento.card8.title', 'Segmentação Estratégica')}
+                </h3>
                 <p className="text-sm text-gray-600 leading-relaxed">
-                  Organize sua base com segmentação por prioridade e carteira, garantindo que o time foque nos clientes certos.
+                  {t('demo.bento.card8.desc', 'Organize sua base com segmentação por prioridade e carteira, garantindo que o time foque nos clientes certos.')}
                 </p>
               </div>
               {/* Fake UI Right */}
@@ -891,18 +916,19 @@ export default function Demonstracao() {
               <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 mb-6 bg-white/10 text-white backdrop-blur-sm">
                 <Lightbulb className="w-6 h-6" strokeWidth={2} />
               </div>
-              <h3 className="text-xl font-bold mb-2 text-white">Ações Guiadas por Dados</h3>
+              <h3 className="text-xl font-bold mb-2 text-white">
+                {t('demo.bento.card9.title', 'Ações Guiadas por Dados')}
+              </h3>
               <p className="text-sm text-white/80 leading-relaxed">
-                Receba recomendações de ação baseadas em dados reais, transformando informações dispersas em próximos passos claros.
+                {t('demo.bento.card9.desc', 'Receba recomendações de ação baseadas em dados reais, transformando informações dispersas em próximos passos claros.')}
               </p>
             </motion.div>
-
           </motion.div>
 
           {/* Footer Buttons */}
           <div className="mt-16 flex justify-center">
             <a href="#demonstracao" className="bg-gradient-to-r from-[#312783] to-[#009a93] text-white px-8 py-4 rounded-lg font-semibold text-lg transition-all duration-300 hover:opacity-90 hover:scale-105 shadow-md w-full sm:w-auto text-center">
-              Solicitar demonstração
+              {t('demo.bento.button', 'Solicitar demonstração')}
             </a>
           </div>
         </motion.div>
@@ -912,7 +938,6 @@ export default function Demonstracao() {
       <section id="demonstracao" className="py-24 md:py-32 px-4 flex items-center justify-center bg-gradient-to-br from-[#312783] via-[#312783] to-[#009a93]/80">
         {/* Main Card Container */}
         <motion.div {...fadeInUp} className="max-w-6xl w-full mx-auto flex flex-col lg:flex-row rounded-[2rem] overflow-hidden shadow-2xl shadow-black/40">
-
           {/* Left Column (Background Image) */}
           <div className="w-full lg:w-1/2 bg-[#312783] flex items-center justify-center overflow-hidden">
             <img
@@ -925,10 +950,10 @@ export default function Demonstracao() {
           {/* Right Column (B2B Form) */}
           <div className="w-full lg:w-1/2 bg-white p-8 md:p-12 lg:p-16 flex flex-col justify-center">
             <h2 className="text-4xl md:text-5xl font-bold font-atkinson text-[#1d1d30] leading-tight mb-2">
-              {siteConfig.form.title}
+              {t('demo.form.title', siteConfig.form.title)}
             </h2>
             <p className="text-gray-500 mb-10">
-              {siteConfig.form.subtitle}
+              {t('demo.form.subtitle', siteConfig.form.subtitle)}
             </p>
 
             {formSubmitted ? (
@@ -940,9 +965,11 @@ export default function Demonstracao() {
                 <div className="w-16 h-16 bg-[#009a93] rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-[#009a93]/20">
                   <Check className="text-white w-8 h-8" strokeWidth={3} />
                 </div>
-                <h3 className="text-2xl font-bold text-[#1d1d30] mb-4">{siteConfig.form.successMessage.title}</h3>
+                <h3 className="text-2xl font-bold text-[#1d1d30] mb-4">
+                  {t('demo.form.successTitle', siteConfig.form.successMessage.title)}
+                </h3>
                 <p className="text-gray-600 leading-relaxed">
-                  {siteConfig.form.successMessage.content}
+                  {t('demo.form.successContent', siteConfig.form.successMessage.content)}
                 </p>
               </motion.div>
             ) : (
@@ -950,33 +977,39 @@ export default function Demonstracao() {
                 <input type="hidden" name="source" value="Demonstração" />
                 {/* Full Name */}
                 <div className="col-span-full">
-                  <label htmlFor="fullName" className="block text-sm font-semibold text-gray-700 mb-1.5">Nome completo</label>
+                  <label htmlFor="fullName" className="block text-sm font-semibold text-gray-700 mb-1.5">
+                    {t('demo.form.nameLabel', 'Nome completo')}
+                  </label>
                   <input
                     type="text"
                     id="fullName"
                     name="fullName"
                     required
-                    placeholder="Ex: João Silva"
+                    placeholder={t('demo.form.namePlaceholder', 'Ex: João Silva')}
                     className="bg-white border border-gray-300 text-gray-900 rounded-xl px-4 py-3.5 focus:ring-2 focus:ring-[#009a93] focus:border-transparent outline-none transition-all w-full"
                   />
                 </div>
 
                 {/* Corporate Email */}
                 <div className="col-span-full">
-                  <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-1.5">E-mail corporativo</label>
+                  <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-1.5">
+                    {t('demo.form.emailLabel', 'E-mail corporativo')}
+                  </label>
                   <input
                     type="email"
                     id="email"
                     name="email"
                     required
-                    placeholder="joao@suaempresa.com.br"
+                    placeholder={t('demo.form.emailPlaceholder', 'joao@suaempresa.com.br')}
                     className="bg-white border border-gray-300 text-gray-900 rounded-xl px-4 py-3.5 focus:ring-2 focus:ring-[#009a93] focus:border-transparent outline-none transition-all w-full"
                   />
                 </div>
 
                 {/* Phone / WhatsApp */}
                 <div className="col-span-full">
-                  <label htmlFor="phone" className="block text-sm font-semibold text-gray-700 mb-1.5">Telefone / WhatsApp</label>
+                  <label htmlFor="phone" className="block text-sm font-semibold text-gray-700 mb-1.5">
+                    {t('demo.form.phoneLabel', 'Telefone / WhatsApp')}
+                  </label>
                   <input
                     type="tel"
                     id="phone"
@@ -984,33 +1017,37 @@ export default function Demonstracao() {
                     required
                     value={phone}
                     onChange={handlePhone}
-                    placeholder="(00) 00000-0000"
+                    placeholder={t('demo.form.phonePlaceholder', '(00) 00000-0000')}
                     className="bg-white border border-gray-300 text-gray-900 rounded-xl px-4 py-3.5 focus:ring-2 focus:ring-[#009a93] focus:border-transparent outline-none transition-all w-full"
                   />
                 </div>
 
                 {/* Company */}
                 <div>
-                  <label htmlFor="company" className="block text-sm font-semibold text-gray-700 mb-1.5">Nome da Empresa</label>
+                  <label htmlFor="company" className="block text-sm font-semibold text-gray-700 mb-1.5">
+                    {t('demo.form.companyLabel', 'Nome da Empresa')}
+                  </label>
                   <input
                     type="text"
                     id="company"
                     name="company"
                     required
-                    placeholder="Sua Empresa"
+                    placeholder={t('demo.form.companyPlaceholder', 'Sua Empresa')}
                     className="bg-white border border-gray-300 text-gray-900 rounded-xl px-4 py-3.5 focus:ring-2 focus:ring-[#009a93] focus:border-transparent outline-none transition-all w-full"
                   />
                 </div>
 
                 {/* Role */}
                 <div>
-                  <label htmlFor="role" className="block text-sm font-semibold text-gray-700 mb-1.5">Cargo</label>
+                  <label htmlFor="role" className="block text-sm font-semibold text-gray-700 mb-1.5">
+                    {t('demo.form.roleLabel', 'Cargo')}
+                  </label>
                   <input
                     type="text"
                     id="role"
                     name="role"
                     required
-                    placeholder="Ex: Diretor, Gerente"
+                    placeholder={t('demo.form.rolePlaceholder', 'Ex: Diretor, Gerente')}
                     className="bg-white border border-gray-300 text-gray-900 rounded-xl px-4 py-3.5 focus:ring-2 focus:ring-[#009a93] focus:border-transparent outline-none transition-all w-full"
                   />
                 </div>
@@ -1021,14 +1058,14 @@ export default function Demonstracao() {
                   disabled={isSubmitting}
                   className="col-span-full w-full mt-4 bg-[#009a93] text-white font-semibold text-lg rounded-lg py-4 transition-all duration-300 hover:scale-[1.03] hover:bg-[#00807a] disabled:opacity-60 disabled:cursor-not-allowed"
                 >
-                  {isSubmitting ? 'Enviando...' : siteConfig.form.buttonText}
+                  {isSubmitting ? t('demo.form.sending', 'Enviando...') : t('demo.form.buttonText', siteConfig.form.buttonText)}
                 </button>
               </form>
             )}
 
             {/* Trust Footer */}
             <p className="text-xs text-gray-400 text-center mt-6">
-              Seus dados estão seguros conosco. Não enviamos spam.
+              {t('demo.form.trust', 'Seus dados estão seguros conosco. Não enviamos spam.')}
             </p>
           </div>
         </motion.div>
@@ -1049,17 +1086,17 @@ export default function Demonstracao() {
             {/* Left Column (Copy) */}
             <div className="flex flex-col justify-center">
               <span className="text-sm font-bold text-gray-500 tracking-widest uppercase mb-6 block">
-                [ QUEM É A NORTYN ]
+                {t('demo.about.badge', '[ QUEM É A NORTYN ]')}
               </span>
               <h2 className="text-4xl md:text-5xl font-bold font-atkinson text-[#1d1d30] leading-tight mb-8">
-                A Nortyn nasce da experiência prática em indústria.
+                {t('demo.about.title', 'A Nortyn nasce da experiência prática em indústria.')}
               </h2>
 
               <p className="text-gray-600 text-lg mb-4">
-                Nosso time de especialistas desenvolve há 25 anos soluções para áreas comerciais. Conhece o chão de fábrica, a pressão por meta e a realidade do representante em campo.
+                {t('demo.about.p1', 'Nosso time de especialistas desenvolve há 25 anos soluções para áreas comerciais. Conhece o chão de fábrica, a pressão por meta e a realidade do representante em campo.')}
               </p>
               <p className="text-gray-600 text-lg mb-8">
-                A Nortyn entrega organização, clareza e execução. Tecnologia aplicada à rotina real da indústria.
+                {t('demo.about.p2', 'A Nortyn entrega organização, clareza e execução. Tecnologia aplicada à rotina real da indústria.')}
               </p>
 
               <ul className="flex flex-col gap-4">
@@ -1067,13 +1104,13 @@ export default function Demonstracao() {
                   <div className="w-6 h-6 rounded-full bg-[#009a93]/10 flex items-center justify-center shrink-0 mt-0.5">
                     <Check className="w-4 h-4 text-[#009a93]" strokeWidth={3} />
                   </div>
-                  Linguagem simples, números claros e decisão com base em fatos.
+                  {t('demo.about.item1', 'Linguagem simples, números claros e decisão com base em fatos.')}
                 </li>
                 <li className="flex items-start gap-3 text-gray-700 font-medium">
                   <div className="w-6 h-6 rounded-full bg-[#009a93]/10 flex items-center justify-center shrink-0 mt-0.5">
                     <Check className="w-4 h-4 text-[#009a93]" strokeWidth={3} />
                   </div>
-                  Implantação rápida, com suporte próximo e foco no que muda a rotina do comercial.
+                  {t('demo.about.item2', 'Implantação rápida, com suporte próximo e foco no que muda a rotina do comercial.')}
                 </li>
               </ul>
             </div>
@@ -1104,20 +1141,20 @@ export default function Demonstracao() {
             {/* Content */}
             <div className="relative z-10 px-6 py-16 md:py-20 text-center flex flex-col items-center">
               <h2 className="text-4xl md:text-5xl font-bold font-atkinson text-white leading-tight mb-6 max-w-3xl">
-                Automatize sua gestão comercial e controle suas metas com clareza.
+                {t('demo.cta.title', 'Automatize sua gestão comercial e controle suas metas com clareza.')}
               </h2>
 
               <p className="text-lg text-white/80 mb-10 max-w-2xl">
-                Tenha visão clara das vendas, metas bem distribuídas e plano de ação estruturado. Veja na demonstração como revolucionar a sua operação.
+                {t('demo.cta.subtitle', 'Tenha visão clara das vendas, metas bem distribuídas e plano de ação estruturado. Veja na demonstração como revolucionar a sua operação.')}
               </p>
 
               {/* Buttons */}
               <div className="flex flex-col sm:flex-row gap-4 justify-center w-full sm:w-auto">
                 <a href="#demonstracao" className="bg-[#009a93] text-white rounded-lg px-8 py-4 font-semibold text-lg transition-all duration-300 hover:scale-105 hover:bg-[#00807a] shadow-lg text-center">
-                  Agendar demonstração personalizada
+                  {t('demo.cta.primary', 'Agendar demonstração personalizada')}
                 </a>
                 <a href="#beneficios" className="bg-transparent border-2 border-white text-white font-semibold text-lg rounded-lg px-8 py-4 transition-all duration-300 hover:scale-105 hover:bg-white/10 text-center">
-                  Rever benefícios
+                  {t('demo.cta.secondary', 'Rever benefícios')}
                 </a>
               </div>
             </div>
@@ -1125,13 +1162,12 @@ export default function Demonstracao() {
         </div>
       </section>
 
-
       {/* Footer */}
       <footer className="w-full bg-[#312783] text-white">
         <div className="max-w-7xl mx-auto px-4 py-16 flex flex-col items-center text-center">
           <img src="/nortyn-bco.png" alt={siteConfig.name} className="h-[55px] w-auto mb-6" />
           <p className="text-white/80 text-lg mb-8 max-w-sm">
-            {siteConfig.footer.tagline}
+            {t('footer.tagline_demo', siteConfig.footer.tagline)}
           </p>
           <div className="flex items-center gap-5">
             {socialLinks.filter(link => link.is_active).map(link => (
@@ -1149,14 +1185,14 @@ export default function Demonstracao() {
 
           <div className="mt-8 flex flex-wrap justify-center gap-6 text-sm text-white/75">
             <Link to="/politica-de-privacidade" className="hover:text-white transition-colors underline underline-offset-4">
-              Política de Privacidade
+              {t('nav.politica', 'Política de Privacidade')}
             </Link>
             <button
               type="button"
               onClick={() => window.dispatchEvent(new CustomEvent('open-cookie-settings'))}
               className="hover:text-white transition-colors underline underline-offset-4 cursor-pointer"
             >
-              Configurações de Cookies
+              {t('nav.cookies', 'Configurações de Cookies')}
             </button>
           </div>
         </div>
@@ -1164,10 +1200,11 @@ export default function Demonstracao() {
         {/* Faixa Inferior de Copyright */}
         <div className="w-full bg-[#009a93] py-4 px-4 text-center">
           <p className="text-sm text-white font-medium">
-            {siteConfig.footer.copyright} | Desenvolvido por <a href="https://www.gaidendesign.com.br" target="_blank" rel="noopener noreferrer" className="underline hover:text-white/80 transition-colors">Gaiden Design</a>
+            © {new Date().getFullYear()} Nortyn. {t('footer.rights', 'Todos os direitos reservados.')} | {t('footer.developed', 'Desenvolvido por')} <a href="https://www.gaidendesign.com.br" target="_blank" rel="noopener noreferrer" className="underline hover:text-white/80 transition-colors">Gaiden Design</a>
           </p>
         </div>
       </footer>
+
       {/* Image Lightbox Modal */}
       {selectedImage && (
         <div 
