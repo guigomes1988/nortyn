@@ -18,13 +18,17 @@ export default function EditableElement({
   style = {} 
 }: EditableElementProps) {
   const { isVisualEditing, siteContent, updateContent } = useAdmin();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const elementRef = useRef<HTMLElement>(null);
   const TagComponent = as as any;
 
-  // Prioriza o conteúdo editado pelo admin se houver; caso contrário, usa a tradução ativa
+  // Quando o idioma for português (ou o modo de edição visual do admin estiver ativo),
+  // respeitamos o conteúdo customizado salvo pelo painel administrativo (siteContent).
+  // Quando o idioma selecionado for outro (en/es), exibimos a tradução ativa correspondente.
   const translatedContent = t(contentKey, defaultContent);
-  const currentContent = siteContent[contentKey] ?? translatedContent;
+  const currentContent = (language === 'pt' || isVisualEditing)
+    ? (siteContent[contentKey] ?? translatedContent)
+    : translatedContent;
 
   useEffect(() => {
     if (elementRef.current && elementRef.current.innerHTML !== currentContent) {
@@ -47,6 +51,7 @@ export default function EditableElement({
 
   return (
     <TagComponent
+      key={`${contentKey}-${language}`}
       ref={elementRef as any}
       contentEditable={isVisualEditing}
       suppressContentEditableWarning={true}
